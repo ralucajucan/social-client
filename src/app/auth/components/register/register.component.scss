@@ -1,0 +1,41 @@
+.register-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  padding: 9vh 0;
+  margin: 0;
+}
+
+mat-card {
+  border-radius: 8px;
+  box-shadow: 1px 2px 8px rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 1rem;
+  :nth-child(3) {
+    grid-column: 1 / span 2;
+  }
+  :nth-child(4),
+  .reset-button {
+    grid-column-start: 1;
+  }
+}
+
+// form {
+//   display: flex;
+//   flex-direction: column;
+//   gap: 0.5rem;
+// }
+
+// .row {
+//   flex-direction: row;
+//   gap: 1rem;
+// }
