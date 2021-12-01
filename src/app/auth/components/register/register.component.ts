@@ -94,6 +94,7 @@ export class RegisterComponent implements OnDestroy {
         }
       );
     }
+    this.confirmPassword?.enable();
     this.registerForm.reset();
   }
 

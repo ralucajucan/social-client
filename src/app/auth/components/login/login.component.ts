@@ -58,7 +58,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         (data) => {
           console.log(data);
           this.snackbarService.success(`Bine ati venit, ${data.userId}!`);
-          this.router.navigate(['/']);
+          this.router.navigate(['/home']);
         },
         (error) => {
           this.snackbarService.error(error.error);

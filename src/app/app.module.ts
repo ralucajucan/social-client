@@ -14,6 +14,9 @@ import { HomeComponent } from './home/home.component';
 import { ErrorComponent } from './error/error.component';
 import { appInitializerProviders } from './auth/services/app.initializer';
 import { authInterceptorProviders } from './auth/services/auth.interceptor';
+import { ToolbarComponent } from './toolbar/toolbar.component';
+import { ProfileComponent } from './profile/profile.component';
+import { MessagesComponent } from './messages/messages.component';
 
 @NgModule({
   declarations: [
@@ -22,6 +25,9 @@ import { authInterceptorProviders } from './auth/services/auth.interceptor';
     RegisterComponent,
     ErrorComponent,
     HomeComponent,
+    ToolbarComponent,
+    ProfileComponent,
+    MessagesComponent,
   ],
   imports: [
     MaterialModule,

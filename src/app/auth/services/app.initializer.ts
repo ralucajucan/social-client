@@ -11,10 +11,10 @@ export function appInitializer(
     const refreshToken = sessionService.getRefresh();
     if (refreshToken)
       authService.refreshToken(refreshToken).subscribe(
-        (response) => sessionService.saveJWT(response.token),
-        (error) => {
-          authService.logout(error);
-        }
+        (response) => {
+          sessionService.saveJWT(response.token);
+        },
+        (error) => authService.logout(error)
       );
   };
 }
