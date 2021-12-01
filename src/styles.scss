@@ -54,3 +54,28 @@ body {
 //   text-rendering: optimizeLegibility;
 //   font-family: "Raleway", Sans-serif;
 // }
+.error-snackbar {
+  background-color: #d32f2f;
+  color: #fff;
+  button {
+    color: #fff;
+  }
+}
+
+.warn-snackbar {
+  background-color: #ed6c02;
+  color: #fff;
+}
+
+.info-snackbar {
+  background-color: #0288d1;
+  color: #fff;
+}
+
+.success-snackbar {
+  background-color: #2e7d32;
+  color: #fff;
+  button {
+    color: #fff;
+  }
+}

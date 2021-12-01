@@ -55,5 +55,8 @@
         </button>
       </form>
     </mat-card-content>
+    <mat-card-footer *ngIf="error">
+      {{ error }}
+    </mat-card-footer>
   </mat-card>
 </div>

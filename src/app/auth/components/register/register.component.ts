@@ -1,13 +1,17 @@
+import { formatDate } from '@angular/common';
 import { Component, OnDestroy } from '@angular/core';
 import {
   AbstractControlOptions,
   FormBuilder,
   Validators,
 } from '@angular/forms';
+import { IRegister } from '../../models/auth.model';
+import { AuthService } from '../../services/auth.service';
 import {
   ConfirmPasswordStateMatcher,
   distinctPasswordValidator,
 } from './validator.directive';
+import { SnackbarService } from 'src/app/snackbar.service';
 
 @Component({
   selector: 'app-register',
@@ -20,11 +24,11 @@ export class RegisterComponent implements OnDestroy {
 
   registerForm = this.formBuilder.group(
     {
+      firstName: ['', [Validators.required, Validators.maxLength(50)]],
+      lastName: ['', [Validators.required, Validators.maxLength(50)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: [''],
-      firstName: ['', [Validators.required, Validators.maxLength(50)]],
-      lastName: ['', [Validators.required, Validators.maxLength(50)]],
       birthDate: ['', Validators.required],
     },
     {
@@ -34,7 +38,11 @@ export class RegisterComponent implements OnDestroy {
   confirmPasswordStateMatcher = new ConfirmPasswordStateMatcher();
   hide: boolean = true;
 
-  constructor(public formBuilder: FormBuilder) {
+  constructor(
+    public formBuilder: FormBuilder,
+    private authService: AuthService,
+    private snackbarService: SnackbarService
+  ) {
     const currentYear = new Date().getFullYear();
     this.minBirthDate = new Date(currentYear - 120, 1, 1);
     this.maxBirthDate = new Date(currentYear - 12, 12, 31);
@@ -60,12 +68,33 @@ export class RegisterComponent implements OnDestroy {
     return this.registerForm.get('lastName');
   }
 
+  get birthDate() {
+    return this.registerForm.get('birthDate');
+  }
+
   ngOnDestroy() {
     this.registerForm.reset();
   }
 
   onSubmit() {
-    console.log(this.registerForm);
+    if (this.registerForm.valid) {
+      this.confirmPassword?.disable();
+      const registerData: IRegister = {
+        ...this.registerForm.value,
+        birthDate: formatDate(this.birthDate?.value, 'yyyy-MM-dd', 'en-US'),
+      };
+
+      console.log(registerData);
+      this.authService.register(registerData).subscribe(
+        (data) => {
+          this.snackbarService.success('Registration success!');
+        },
+        (error) => {
+          this.snackbarService.error(error.error);
+        }
+      );
+    }
+    this.registerForm.reset();
   }
 
   getPasswordErrorMessage() {
@@ -86,6 +115,6 @@ export class RegisterComponent implements OnDestroy {
     if (this.registerForm.errors?.distinctPassword) {
       return 'Confirmarea parolei nu se potriveste.';
     }
-    return '???';
+    return '';
   }
 }

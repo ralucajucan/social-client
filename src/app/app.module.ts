@@ -4,17 +4,24 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './auth/components/login/login.component';
 import { RegisterComponent } from './auth/components/register/register.component';
-import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from './material.module';
+import { StoreModule } from '@ngrx/store';
+import { HttpClientModule } from '@angular/common/http';
+import { authReducer } from './auth/store/reducers/auth.reducer';
+import { HomeComponent } from './home/home.component';
+import { ErrorComponent } from './error/error.component';
+import { appInitializerProviders } from './auth/services/app.initializer';
+import { authInterceptorProviders } from './auth/services/auth.interceptor';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
     RegisterComponent,
-    PageNotFoundComponent,
+    ErrorComponent,
+    HomeComponent,
   ],
   imports: [
     MaterialModule,
@@ -22,8 +29,10 @@ import { MaterialModule } from './material.module';
     AppRoutingModule,
     BrowserAnimationsModule,
     ReactiveFormsModule,
+    HttpClientModule,
+    StoreModule.forRoot({ auth: authReducer }),
   ],
-  providers: [],
+  providers: [authInterceptorProviders, appInitializerProviders],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
