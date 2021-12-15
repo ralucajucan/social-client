@@ -1,0 +1,73 @@
+@use "@angular/material" as mat;
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+// Plus imports for other components in your app.
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue. Available color palettes: https://material.io/design/color/
+// $social-client-accent: mat.define-palette(mat.$grey-palette, 700, 500, 900);
+
+$app-primary: mat.define-palette(mat.$blue-grey-palette);
+
+$app-accent: mat.define-palette(mat.$pink-palette, A200);
+
+// The warn palette is optional (defaults to red).
+$app-warn: mat.define-palette(mat.$deep-orange-palette);
+
+// Create the theme object. A theme consists of configurations for individual
+// theming systems such as "color" or "typography".
+$app-theme: mat.define-light-theme(
+  (
+    color: (
+      primary: $app-primary,
+      accent: $app-accent,
+      warn: $app-warn,
+    ),
+  )
+);
+
+// APP-PRIMARY
+$primary-default: mat.get-color-from-palette($app-primary, 500);
+$primary-darker: mat.get-color-from-palette($app-primary, "darker");
+$primary-lighter: mat.get-color-from-palette($app-primary, "lighter");
+$primary-default-contrast: mat.get-color-from-palette(
+  $app-primary,
+  "500-contrast"
+);
+$primary-darker-contrast: mat.get-color-from-palette(
+  $app-primary,
+  "darker-contrast"
+);
+$primary-lighter-contrast: mat.get-color-from-palette(
+  $app-primary,
+  "lighter-contrast"
+);
+
+// APP-ACCENT
+$accent-default: mat.get-color-from-palette($app-accent, "A200");
+$accent-darker: mat.get-color-from-palette($app-accent, "darker");
+$accent-lighter: mat.get-color-from-palette($app-accent, "lighter");
+$accent-default-contrast: mat.get-color-from-palette(
+  $app-accent,
+  "A200-contrast"
+);
+$accent-darker-contrast: mat.get-color-from-palette(
+  $app-accent,
+  "darker-contrast"
+);
+$accent-lighter-contrast: mat.get-color-from-palette(
+  $app-accent,
+  "lighter-contrast"
+);
+
+// APP-WARN
+$warn-default: mat.get-color-from-palette($app-warn, 500);
+$warn-darker: mat.get-color-from-palette($app-warn, "darker");
+$warn-lighter: mat.get-color-from-palette($app-warn, "lighter");
+$warn-default-contrast: mat.get-color-from-palette($app-warn, "500-contrast");
+$warn-darker-contrast: mat.get-color-from-palette($app-warn, "darker-contrast");
+$warn-lighter-contrast: mat.get-color-from-palette(
+  $app-warn,
+  "lighter-contrast"
+);

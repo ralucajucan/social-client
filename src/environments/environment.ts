@@ -5,6 +5,9 @@
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080/api',
+  wsUrl: 'ws://localhost:8080',
+  JWT_KEY: 'auth-jwt',
+  REFRESH_KEY: 'auth-refresh',
 };
 
 /*

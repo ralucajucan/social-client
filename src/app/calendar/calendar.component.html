@@ -1,0 +1,21 @@
+<app-toolbar></app-toolbar>
+<mat-grid-list cols="7" rowHeight="fit">
+  <mat-grid-tile
+    class="mat-display-2"
+    colspan="7"
+    rowspan="4"
+    [style.background-image]="
+      'url(assets/calendar/bkg_' + (date.getMonth() + 1) + '.jpg'
+    "
+  >
+    {{ months[date.getMonth()] }}
+  </mat-grid-tile>
+  <mat-grid-tile class="mat-h3" colspan="1" *ngFor="let day of days">{{
+    day
+  }}</mat-grid-tile>
+  <mat-grid-tile colspan="1" rowspan="3" *ngFor="let date of getAllDays()">{{
+    date | date: "d"
+  }}</mat-grid-tile>
+</mat-grid-list>
+
+<!-- (click)="selected.emit(date)" -->

@@ -1,43 +1,17 @@
 @charset "UTF-8";
-@use "~@angular/material" as mat;
+@use "@angular/material" as mat;
 @import url("https://fonts.googleapis.com/css?family=Raleway");
-
-// Custom Theming for Angular Material
-// For more information: https://material.angular.io/guide/theming
-// Plus imports for other components in your app.
-
+@import url("https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2&display=swap");
+@import "material.scss";
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
 @include mat.core();
 
-// Define the palettes for your theme using the Material Design palettes available in palette.scss
-// (imported above). For each palette, you can optionally specify a default, lighter, and darker
-// hue. Available color palettes: https://material.io/design/color/
-// $social-client-accent: mat.define-palette(mat.$grey-palette, 700, 500, 900);
-$social-client-primary: mat.define-palette(mat.$deep-purple-palette);
-
-$social-client-accent: mat.define-palette(mat.$light-green-palette, A200);
-
-// The warn palette is optional (defaults to red).
-$social-client-warn: mat.define-palette(mat.$red-palette);
-
-// Create the theme object. A theme consists of configurations for individual
-// theming systems such as "color" or "typography".
-$social-client-theme: mat.define-light-theme(
-  (
-    color: (
-      primary: $social-client-primary,
-      accent: $social-client-accent,
-      warn: $social-client-warn,
-    ),
-  )
-);
-
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include mat.all-component-themes($social-client-theme);
+@include mat.all-component-themes($app-theme);
 
 html,
 body {
@@ -55,10 +29,10 @@ body {
 //   font-family: "Raleway", Sans-serif;
 // }
 .error-snackbar {
-  background-color: #d32f2f;
-  color: #fff;
+  background-color: $warn-default;
+  color: $warn-default-contrast;
   button {
-    color: #fff;
+    color: $warn-default-contrast;
   }
 }
 

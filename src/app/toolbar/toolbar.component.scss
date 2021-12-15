@@ -1,9 +1,11 @@
+@import "material.scss";
+
 .mat-toolbar {
   gap: 1rem;
 }
 
 .mat-button.selected {
-  background-color: #4d2c91;
+  background-color: $primary-darker;
 }
 
 .spacer {
