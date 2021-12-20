@@ -23,6 +23,7 @@ import {
   rxStompServiceFactory,
 } from '@stomp/ng2-stompjs';
 import { myRxStompConfig } from './my-rx-stomp.config';
+import { NgBoringAvatarsModule } from 'ng-boring-avatars';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { myRxStompConfig } from './my-rx-stomp.config';
     BrowserAnimationsModule,
     ReactiveFormsModule,
     HttpClientModule,
+    NgBoringAvatarsModule,
   ],
   providers: [
     authInterceptorProviders,

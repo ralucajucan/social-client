@@ -1,0 +1,11 @@
+@import "material.scss";
+mat-sidenav-container {
+  height: calc(100vh - 65px);
+  mat-sidenav {
+    width: 200px;
+  }
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+}
