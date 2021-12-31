@@ -1,8 +1,35 @@
 @import "material.scss";
 mat-sidenav-container {
   height: calc(100vh - 65px);
+  background-color: transparent;
   mat-sidenav {
     width: 200px;
+  }
+  mat-sidenav-content {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    .messages-list {
+      overflow-y: scroll;
+      mat-list-item {
+        height: auto;
+      }
+      ::ng-deep.mat-list-item-content {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto 1fr;
+        column-gap: 1rem;
+      }
+      ng-boring-avatars-beam-avatar {
+        grid-row: span 2;
+      }
+    }
+    .messages-input {
+      input {
+        width: calc(80vw - 200px);
+      }
+      padding-bottom: 1rem;
+    }
   }
 }
 .header {

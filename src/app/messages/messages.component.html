@@ -26,10 +26,9 @@
       </button>
     </mat-action-list>
     <ng-template #notConnected>You are not connected!</ng-template>
-    <p>{{ users }}</p>
   </mat-sidenav>
   <mat-sidenav-content>
-    <div id="messages">
+    <div class="messages-list">
       <div class="header">
         <h2>Received messages</h2>
         <app-status [status]="connectionStatus$ | async"></app-status>
@@ -37,15 +36,37 @@
       <mat-divider></mat-divider>
       <div class="messages-list"></div>
 
-      <button class="btn btn-primary" (click)="onSendMessage()">
+      <button class="btn btn-primary" (click)="onSendGeneratedMessage()">
         Send Message
       </button>
-      <ol>
-        <!-- we will use Angular binding to populate list of messages -->
-        <li class="message" *ngFor="let message of receivedMessages">
-          {{ message }}
-        </li>
-      </ol>
+      <mat-list>
+        <mat-list-item *ngFor="let message of receivedMessages">
+          <ng-boring-avatars-beam-avatar
+            mat-list-avatar
+            [name]="message.sender"
+            [colors]="['#172C3C', '#274862', '#995052', '#D96831', '#E6B33D']"
+            [inputSize]="40"
+          ></ng-boring-avatars-beam-avatar>
+          <mat-card class="mat-elevation-z0">{{ message.text }}</mat-card>
+          <h6>{{ message.createdOn | date: "medium" }}</h6>
+        </mat-list-item>
+      </mat-list>
+    </div>
+    <div class="messages-input">
+      <input
+        matInput
+        placeholder="Trimiteti un mesaj"
+        id="message"
+        type="text"
+        #message
+      />
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="onSendMessage(message.value)"
+      >
+        Trimite
+      </button>
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

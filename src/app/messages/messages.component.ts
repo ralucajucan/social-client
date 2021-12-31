@@ -4,6 +4,9 @@ import { RxStompState } from '@stomp/rx-stomp';
 import { Message } from '@stomp/stompjs';
 import { Observable, pipe, Subscription } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { SnackbarService } from '../snackbar.service';
+import { IMessage } from './messages.model';
+import { MessagesService } from './messages.service';
 
 @Component({
   selector: 'app-messages',
@@ -12,15 +15,21 @@ import { map, tap } from 'rxjs/operators';
 })
 export class MessagesComponent implements OnInit, OnDestroy {
   private selectedUser: string = '';
+  private page: number = 0;
   private principal: string = '';
-  public receivedMessages: string[] = [];
+  public receivedMessages: IMessage[] = [];
   public users: string[] = [];
   public connectionStatus$: Observable<string>;
-  private userQueueSubscription: Subscription = new Subscription();
+  private conversationSubscription: Subscription = new Subscription();
   private usersSubscription: Subscription = new Subscription();
   private connectedSubscribtion: Subscription = new Subscription();
+  private errorSubscribtion: Subscription = new Subscription();
 
-  constructor(private rxStompService: RxStompService) {
+  constructor(
+    private rxStompService: RxStompService,
+    private snackbarService: SnackbarService,
+    private messagesService: MessagesService
+  ) {
     this.connectionStatus$ = rxStompService.connectionState$.pipe(
       map((state) => {
         if (state === 1) {
@@ -52,21 +61,28 @@ export class MessagesComponent implements OnInit, OnDestroy {
           .slice(2, message.body.length - 2)
           .split('","');
       });
-    this.userQueueSubscription = this.rxStompService
-      .watch('/user/queue/greetings')
+    this.conversationSubscription = this.rxStompService
+      .watch('/user/queue/conv-' + this.selectedUser)
       .subscribe((message: Message) => {
         if (message.body.includes(this.principal))
-          this.receivedMessages.push(message.body);
+          this.receivedMessages.push(JSON.parse(message.body));
+      });
+    this.errorSubscribtion = this.rxStompService
+      .watch('/user/queue/error')
+      .subscribe((error: Message) => {
+        console.log(error);
+        this.snackbarService.error(error.body);
       });
   }
 
   ngOnDestroy() {
-    this.userQueueSubscription.unsubscribe();
+    this.conversationSubscription.unsubscribe();
     this.usersSubscription.unsubscribe();
     this.connectedSubscribtion.unsubscribe();
+    this.errorSubscribtion.unsubscribe();
   }
 
-  onSendMessage() {
+  onSendGeneratedMessage() {
     const message: SendDTO = {
       text: `Message generated at ${new Date()}`,
       receiver: this.selectedUser,
@@ -77,8 +93,42 @@ export class MessagesComponent implements OnInit, OnDestroy {
     });
   }
 
+  onSendMessage(text: string) {
+    const message: SendDTO = {
+      text: text,
+      receiver: this.selectedUser,
+    };
+    this.rxStompService.publish({
+      destination: '/api/message',
+      body: JSON.stringify(message),
+    });
+  }
+
   selectUser(user: string) {
+    this.page = 0;
+    this.receivedMessages = [];
     this.selectedUser = user;
+    this.conversationSubscription.unsubscribe();
+    this.conversationSubscription = this.rxStompService
+      .watch('/user/queue/conv-' + this.selectedUser)
+      .subscribe((message: Message) => {
+        if (message.body.includes(this.principal))
+          this.receivedMessages.push(JSON.parse(message.body));
+      });
+    this.messagesService
+      .getConversation(this.selectedUser, this.page)
+      .subscribe(
+        (data) => {
+          this.snackbarService.success(
+            `Retrieved conversation with ${this.selectedUser}`
+          );
+          console.log(data);
+          this.receivedMessages = data.concat(this.receivedMessages);
+        },
+        (error) => {
+          this.snackbarService.error(error.error);
+        }
+      );
   }
 }
 
