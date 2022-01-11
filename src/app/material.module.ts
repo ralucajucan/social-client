@@ -14,6 +14,9 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatBadgeModule } from '@angular/material/badge';
 
 @NgModule({
   exports: [
@@ -32,6 +35,9 @@ import { MatListModule } from '@angular/material/list';
     MatSidenavModule,
     MatDividerModule,
     MatListModule,
+    MatProgressBarModule,
+    MatTooltipModule,
+    MatBadgeModule,
   ],
 })
 export class MaterialModule {}

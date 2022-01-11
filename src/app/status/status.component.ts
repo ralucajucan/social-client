@@ -1,8 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { RxStompService, StompHeaders } from '@stomp/ng2-stompjs';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import { RxStompState } from '@stomp/rx-stomp';
+import { Component, Input } from '@angular/core';
+import { RxStompService } from '@stomp/ng2-stompjs';
 
 @Component({
   selector: 'app-status',

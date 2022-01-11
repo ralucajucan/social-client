@@ -1,22 +1,16 @@
-<mat-toolbar color="primary">
-  <button mat-button routerLink="/home" routerLinkActive="selected">
-    <mat-icon>school</mat-icon> Acasă
+<mat-toolbar>
+  <button mat-button routerLink="/messages" routerLinkActive="selected">
+    <mat-icon>email</mat-icon> Mesagerie
   </button>
   <button mat-button routerLink="/profile" routerLinkActive="selected">
     <mat-icon>person</mat-icon> Profil
   </button>
-  <button mat-button routerLink="/calendar" routerLinkActive="selected">
-    <mat-icon>event</mat-icon> Calendar
-  </button>
+  <button mat-button><mat-icon>search</mat-icon> Căutare</button>
   <span class="spacer"></span>
-  <button mat-icon-button routerLink="/messages" routerLinkActive="selected">
-    <mat-icon>email</mat-icon>
-  </button>
   <button mat-icon-button [matMenuTriggerFor]="settings">
     <mat-icon>settings</mat-icon>
   </button>
   <mat-menu #settings="matMenu">
-    <button mat-menu-item>Item 1</button>
     <button mat-menu-item (click)="onLogout()">Deconectare</button>
   </mat-menu>
 </mat-toolbar>

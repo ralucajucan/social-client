@@ -2,71 +2,137 @@
 
 <mat-sidenav-container>
   <mat-sidenav mode="side" opened>
+    <app-status [status]="connectionStatus$ | async"></app-status>
     <mat-action-list
       *ngIf="
         (connectionStatus$ | async) === 'OPEN' && users !== [];
         else notConnected
       "
     >
+      <h3 mat-subheader>Grupuri</h3>
       <h3 mat-subheader>Contacte</h3>
       <button
         mat-list-item
-        (click)="selectUser(user)"
+        (click)="selectUser(user.email)"
         *ngFor="let user of users; last as last"
       >
-        <ng-boring-avatars-beam-avatar
+        <div
           mat-list-avatar
-          [name]="user"
-          [colors]="['#172C3C', '#274862', '#995052', '#D96831', '#E6B33D']"
-          [inputSize]="40"
-        ></ng-boring-avatars-beam-avatar>
-        <h4 mat-line>{{ user }}</h4>
-        <p mat-line class="demo-2">"hello"</p>
-        <mat-divider [inset]="true" *ngIf="!last"></mat-divider>
-      </button>
-    </mat-action-list>
-    <ng-template #notConnected>You are not connected!</ng-template>
-  </mat-sidenav>
-  <mat-sidenav-content>
-    <div class="messages-list">
-      <div class="header">
-        <h2>Received messages</h2>
-        <app-status [status]="connectionStatus$ | async"></app-status>
-      </div>
-      <mat-divider></mat-divider>
-      <div class="messages-list"></div>
-
-      <button class="btn btn-primary" (click)="onSendGeneratedMessage()">
-        Send Message
-      </button>
-      <mat-list>
-        <mat-list-item *ngFor="let message of receivedMessages">
+          matBadge="0"
+          matBadgePosition="above after"
+          matBadgeSize="small"
+          [matBadgeColor]="user.online ? 'accent' : 'warn'"
+          class="hide-text"
+        >
           <ng-boring-avatars-beam-avatar
-            mat-list-avatar
-            [name]="message.sender"
+            [name]="user.name"
             [colors]="['#172C3C', '#274862', '#995052', '#D96831', '#E6B33D']"
             [inputSize]="40"
           ></ng-boring-avatars-beam-avatar>
-          <mat-card class="mat-elevation-z0">{{ message.text }}</mat-card>
+        </div>
+        <h4 mat-line [matTooltip]="user.name">{{ user.name }}</h4>
+        <span mat-line [matTooltip]="user.email">{{ user.email }}</span>
+        <mat-divider [inset]="true" *ngIf="!last"></mat-divider>
+      </button>
+    </mat-action-list>
+    <ng-template #notConnected>Nu sunteti conectat!</ng-template>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <div class="messages-list" *ngIf="selectedUser !== ''">
+      <mat-list>
+        <mat-list-item>
+          <button
+            mat-button
+            (click)="loadMore()"
+            *ngIf="!endOfConversation; else endConv"
+          >
+            Mai vechi...
+          </button>
+          <ng-template #endConv>Sfârșitul conversației</ng-template>
+        </mat-list-item>
+        <mat-list-item *ngFor="let message of receivedMessages; let i = index">
+          <ng-boring-avatars-beam-avatar
+            mat-list-avatar
+            [name]="message.sender | emailBase: users"
+            [colors]="['#172C3C', '#274862', '#995052', '#D96831', '#E6B33D']"
+            [inputSize]="40"
+          ></ng-boring-avatars-beam-avatar>
+          <div>
+            <mat-card class="mat-elevation-z0"
+              ><button
+                class="file-button"
+                mat-raised-button
+                type="button"
+                *ngIf="message.attachments"
+                (click)="
+                  download(
+                    message.attachmentIds,
+                    message.attachments[0].name,
+                    i
+                  )
+                "
+              >
+                {{ message.attachments[0].name }}
+              </button>
+              {{ message.text }}
+            </mat-card>
+            <mat-progress-bar
+              *ngIf="
+                i === selectedToDownload && (download$ | async) as download
+              "
+              [mode]="download.state == 'PENDING' ? 'buffer' : 'determinate'"
+              [value]="download.progress"
+            >
+            </mat-progress-bar>
+          </div>
           <h6>{{ message.createdOn | date: "medium" }}</h6>
         </mat-list-item>
       </mat-list>
     </div>
-    <div class="messages-input">
-      <input
-        matInput
-        placeholder="Trimiteti un mesaj"
-        id="message"
-        type="text"
-        #message
-      />
-      <button
-        mat-flat-button
-        color="primary"
-        (click)="onSendMessage(message.value)"
-      >
-        Trimite
-      </button>
+
+    <div class="messages-input" *ngIf="selectedUser !== ''">
+      <mat-divider></mat-divider>
+      <mat-card>
+        <form [formGroup]="messageForm" (ngSubmit)="onSendMessage()">
+          <mat-label>File</mat-label>
+          <button
+            class="file-button"
+            mat-raised-button
+            type="button"
+            (click)="fileInput.click()"
+          >
+            {{ file ? file.name : "Select" }}
+            <mat-progress-bar
+              *ngIf="upload"
+              [mode]="upload.state == 'PENDING' ? 'buffer' : 'determinate'"
+              [value]="upload.progress"
+            >
+            </mat-progress-bar>
+          </button>
+          <input
+            hidden
+            id="file"
+            type="file"
+            #fileInput
+            (change)="onFileInput(fileInput.files)"
+          />
+          <mat-form-field appearance="outline">
+            <mat-label>Text</mat-label>
+            <textarea
+              matInput
+              [placeholder]="'Trimiteti mesaj catre ' + selectedUser"
+              id="text"
+              type="text"
+              formControlName="text"
+            ></textarea>
+            <mat-error>Continutul mesajului e gol!</mat-error>
+          </mat-form-field>
+          <button mat-icon-button color="primary">
+            <mat-icon>send</mat-icon>
+          </button>
+        </form>
+      </mat-card>
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

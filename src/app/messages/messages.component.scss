@@ -10,9 +10,14 @@ mat-sidenav-container {
     grid-template-rows: auto 1fr;
     gap: 1rem;
     .messages-list {
-      overflow-y: scroll;
+      overflow-y: auto;
       mat-list-item {
         height: auto;
+      }
+      mat-list-item:first-of-type {
+        display: flex;
+        justify-content: center;
+        padding-bottom: 1rem;
       }
       ::ng-deep.mat-list-item-content {
         display: grid;
@@ -25,14 +30,24 @@ mat-sidenav-container {
       }
     }
     .messages-input {
-      input {
-        width: calc(80vw - 200px);
+      align-self: flex-end;
+      mat-card {
+        display: flex;
       }
-      padding-bottom: 1rem;
     }
   }
 }
 .header {
   display: flex;
   justify-content: space-between;
+}
+.file-button {
+  max-width: 10rem;
+  max-height: 72px;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+}
+
+.mat-badge.hide-text .mat-badge-content {
+  color: transparent;
 }

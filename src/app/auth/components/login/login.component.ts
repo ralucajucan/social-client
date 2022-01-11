@@ -57,7 +57,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       .subscribe(
         (data) => {
           console.log(data);
-          this.router.navigate(['/home']);
+          this.router.navigate(['/messages']);
         },
         (error) => {
           this.snackbarService.error(error.error);

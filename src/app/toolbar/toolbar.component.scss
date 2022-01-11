@@ -2,10 +2,11 @@
 
 .mat-toolbar {
   gap: 1rem;
+  background-color: white;
 }
 
 .mat-button.selected {
-  background-color: $primary-darker;
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .spacer {

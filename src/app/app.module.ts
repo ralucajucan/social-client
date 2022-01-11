@@ -8,14 +8,11 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from './material.module';
 import { HttpClientModule } from '@angular/common/http';
-import { HomeComponent } from './home/home.component';
 import { ErrorComponent } from './error/error.component';
 import { appInitializerProviders } from './auth/services/app.initializer';
 import { authInterceptorProviders } from './auth/services/auth.interceptor';
 import { ToolbarComponent } from './toolbar/toolbar.component';
-import { ProfileComponent } from './profile/profile.component';
 import { MessagesComponent } from './messages/messages.component';
-import { CalendarComponent } from './calendar/calendar.component';
 import { StatusComponent } from './status/status.component';
 import {
   InjectableRxStompConfig,
@@ -24,6 +21,9 @@ import {
 } from '@stomp/ng2-stompjs';
 import { myRxStompConfig } from './my-rx-stomp.config';
 import { NgBoringAvatarsModule } from 'ng-boring-avatars';
+import { ProfileComponent } from './profile/profile.component';
+import { MarkdownModule } from 'ngx-markdown';
+import { EmailBase } from './messages/services/email.pipe';
 
 @NgModule({
   declarations: [
@@ -31,12 +31,11 @@ import { NgBoringAvatarsModule } from 'ng-boring-avatars';
     LoginComponent,
     RegisterComponent,
     ErrorComponent,
-    HomeComponent,
     ToolbarComponent,
     ProfileComponent,
     MessagesComponent,
-    CalendarComponent,
     StatusComponent,
+    EmailBase,
   ],
   imports: [
     MaterialModule,
@@ -46,6 +45,7 @@ import { NgBoringAvatarsModule } from 'ng-boring-avatars';
     ReactiveFormsModule,
     HttpClientModule,
     NgBoringAvatarsModule,
+    MarkdownModule.forRoot(),
   ],
   providers: [
     authInterceptorProviders,

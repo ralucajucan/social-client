@@ -8,12 +8,16 @@
 // hue. Available color palettes: https://material.io/design/color/
 // $social-client-accent: mat.define-palette(mat.$grey-palette, 700, 500, 900);
 
-$app-primary: mat.define-palette(mat.$blue-grey-palette);
+$app-primary: mat.define-palette(mat.$purple-palette, "A700");
 
-$app-accent: mat.define-palette(mat.$pink-palette, A200);
+$app-accent: mat.define-palette(mat.$light-green-palette, 500);
 
 // The warn palette is optional (defaults to red).
 $app-warn: mat.define-palette(mat.$deep-orange-palette);
+
+$app-typography: mat.define-typography-config(
+  $font-family: "Raleway",
+);
 
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
@@ -24,6 +28,7 @@ $app-theme: mat.define-light-theme(
       accent: $app-accent,
       warn: $app-warn,
     ),
+    typography: $app-typography,
   )
 );
 
