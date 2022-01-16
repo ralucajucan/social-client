@@ -26,7 +26,7 @@
     >
       <mat-list-option
         (click)="selectUser(user)"
-        *ngFor="let user of users$ | async; last as last"
+        *ngFor="let user of users$ | async; last as last; index as index"
         [value]="user"
       >
         <app-avatar
@@ -35,8 +35,16 @@
           [badge]="true"
           [online]="user.online"
         ></app-avatar>
+
         <h4 mat-line [matTooltip]="user.name">{{ user.name }}</h4>
-        <span mat-line [matTooltip]="user.email">{{ user.email }}</span>
+        <span mat-line style="color: darkviolet" *ngIf="index % 2 == 0"
+          ><mat-icon inline="true">mail</mat-icon> Mesaj nou!</span
+        >
+        <ng-template #noNewMessages
+          ><span mat-line [matTooltip]="user.email">{{
+            user.email
+          }}</span></ng-template
+        >
         <mat-divider [inset]="true" *ngIf="!last"></mat-divider>
       </mat-list-option>
     </mat-selection-list>

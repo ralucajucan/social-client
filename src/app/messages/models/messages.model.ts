@@ -29,4 +29,5 @@ export interface IContact {
   email: string;
   name: string;
   online: boolean;
+  newMessages: number;
 }

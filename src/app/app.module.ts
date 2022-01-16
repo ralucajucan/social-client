@@ -27,7 +27,6 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from 'src/environments/environment';
 import { DateRoPipe } from './pipes/date-ro.pipe';
 import { SearchComponent } from './search/search.component';
-import { MessagesSidenavComponent } from './messages/components/messages-sidenav/messages-sidenav.component';
 import { WsEffects } from './store/effects/ws.effects';
 
 @NgModule({
@@ -44,7 +43,6 @@ import { WsEffects } from './store/effects/ws.effects';
     DateRoPipe,
     AvatarComponent,
     SearchComponent,
-    MessagesSidenavComponent,
   ],
   imports: [
     MaterialModule,

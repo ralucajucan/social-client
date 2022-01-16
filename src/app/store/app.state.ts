@@ -6,11 +6,11 @@ import { wsReducer } from './reducers/ws.reducer';
 
 export interface AuthState extends IUser {
   error: string;
-  // users: IContact[];
 }
 
 export interface WsState {
   users: IContact[];
+  error: string;
 }
 
 export interface AppState {

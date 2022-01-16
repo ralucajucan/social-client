@@ -1,12 +1,21 @@
 import { createAction, props } from '@ngrx/store';
-import { IContact } from 'src/app/messages/models/messages.model';
+import { IContact, IMessage } from 'src/app/messages/models/messages.model';
+
+export const connectionOpen = createAction('[WS] Connection Open');
 
 export const receivedUsers = createAction(
-  '[Auth] Ws Received Users',
+  '[WS] Received Users',
   props<{ users: IContact[] }>()
 );
 
-export const receivedMessages = createAction(
-  '[Auth] Ws Received Users',
-  props<{ users: IContact[] }>()
+export const receivedMessage = createAction(
+  '[WS] Received Message',
+  props<{ message: IMessage }>()
 );
+
+export const receivedError = createAction(
+  '[WS] Received Error',
+  props<{ text: string }>()
+);
+
+export const disconnected = createAction('[Ws] Disconnected');

@@ -9,21 +9,21 @@ import { AppState } from '../store/app.state';
   styleUrls: ['./profile.component.scss'],
 })
 export class ProfileComponent implements OnInit {
-  email: Observable<string>;
-  firstName: Observable<string>;
-  lastName: Observable<string>;
-  birthDate: Observable<string>;
-  biography: Observable<string>;
+  email$: Observable<string>;
+  firstName$: Observable<string>;
+  lastName$: Observable<string>;
+  birthDate$: Observable<string>;
+  biography$: Observable<string>;
 
   constructor(private store: Store<AppState>) {
-    this.email = this.store.pipe(select((state) => state.auth.email)) || '';
-    this.firstName =
+    this.email$ = this.store.pipe(select((state) => state.auth.email)) || '';
+    this.firstName$ =
       this.store.pipe(select((state) => state.auth.firstName)) || '';
-    this.lastName =
+    this.lastName$ =
       this.store.pipe(select((state) => state.auth.lastName)) || '';
-    this.birthDate =
+    this.birthDate$ =
       this.store.pipe(select((state) => state.auth.birthDate)) || '';
-    this.biography =
+    this.biography$ =
       this.store.pipe(select((state) => state.auth.biography)) || '';
   }
 
