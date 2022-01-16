@@ -10,7 +10,6 @@ import {
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { environment } from 'src/environments/environment';
-import { SessionService } from '../services/session.service';
 import { catchError, filter, switchMap, take } from 'rxjs/operators';
 
 @Injectable()
@@ -20,16 +19,13 @@ export class AuthInterceptor implements HttpInterceptor {
     null
   );
 
-  constructor(
-    private authService: AuthService,
-    private sessionService: SessionService
-  ) {}
+  constructor(private authService: AuthService) {}
 
   intercept(
     request: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    const jwt = this.sessionService.getJWT();
+    const jwt = this.authService.getJWT();
     const isApiUrl = request.url.startsWith(environment.apiUrl);
     if (jwt && isApiUrl) {
       request = request.clone({
@@ -53,24 +49,24 @@ export class AuthInterceptor implements HttpInterceptor {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 
-      const refreshToken = this.sessionService.getRefresh();
+      const refreshToken = this.authService.getRefresh();
 
       if (refreshToken)
         return this.authService.refreshToken(refreshToken).pipe(
           switchMap((response) => {
             this.isRefreshing = false;
 
-            this.sessionService.saveJWT(response.token);
+            this.authService.saveJWT(response.jwtToken);
 
             return next.handle(
               request.clone({
-                setHeaders: { Authorization: `Bearer ${response.token}` },
+                setHeaders: { Authorization: `Bearer ${response.jwtToken}` },
               })
             );
           }),
           (error) => {
             this.isRefreshing = false;
-            this.authService.logout(error);
+            this.authService.logout();
             return throwError(error);
           }
         );

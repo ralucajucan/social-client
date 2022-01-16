@@ -1,18 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import {
-  ILogin,
-  ILoginResponse,
-  IRegister,
-  IUser,
-  JWTResponse,
-} from '../models/auth.model';
+import { IAuth, IJwt, ILogin, IRegister, IUser } from '../models/auth.model';
 import { environment } from 'src/environments/environment';
-import { Router } from '@angular/router';
-import { SessionService } from './session.service';
-import { SnackbarService } from 'src/app/snackbar.service';
+import { RxStompService, StompHeaders } from '@stomp/ng2-stompjs';
+import { myRxStompConfig } from 'src/app/my-rx-stomp.config';
 
 const httpOptions = {
   headers: new HttpHeaders({
@@ -23,33 +16,27 @@ const httpOptions = {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   constructor(
-    private snackbarService: SnackbarService,
-    private router: Router,
     private httpClient: HttpClient,
-    private sessionService: SessionService
+    private rxStompService: RxStompService
   ) {}
 
-  login(loginData: ILogin): Observable<ILoginResponse> {
+  login(loginData: ILogin): Observable<IUser> {
     return this.httpClient
-      .post<ILoginResponse>(
-        `${environment.apiUrl}/auth`,
-        loginData,
-        httpOptions
-      )
+      .post<IAuth>(`${environment.apiUrl}/auth`, loginData, httpOptions)
       .pipe(
-        tap(({ jwtToken, refreshToken, ...user }) => {
-          this.sessionService.saveJWT(jwtToken);
-          this.sessionService.saveRefresh(refreshToken);
+        map(({ jwtToken, refreshToken, ...user }) => {
+          console.log(jwtToken);
+          console.log(refreshToken);
+          this.saveJWT(jwtToken);
+          this.saveRefresh(refreshToken);
+          return user;
         })
       );
   }
 
-  logout(error?: any): void {
-    this.sessionService.logout();
-    this.router.navigate(['/login']);
-    if (error) {
-      this.snackbarService.warn(error.error);
-    }
+  logout(): void {
+    this.rxStompService.deactivate();
+    window.sessionStorage.clear();
   }
 
   register(registerData: IRegister): Observable<IRegister> {
@@ -60,13 +47,40 @@ export class AuthService {
     );
   }
 
-  refreshToken(refreshToken: string): Observable<JWTResponse> {
-    return this.httpClient.get<JWTResponse>(
-      `${environment.apiUrl}/auth/refresh`,
-      {
-        ...httpOptions,
-        params: new HttpParams().set('token', refreshToken),
-      }
-    );
+  saveJWT(token: string) {
+    window.sessionStorage.removeItem(environment.JWT_KEY);
+    window.sessionStorage.setItem(environment.JWT_KEY, token);
+    this.rxStompService.configure(myRxStompConfig);
+    this.rxStompService.activate();
+    // this.rxStompService.serverHeaders$.pipe(
+    //   tap(async (headers: StompHeaders) => {
+    //     if (!headers.hasOwnProperty('user-name')) {
+    //       this.rxStompService.stompClient.forceDisconnect();
+    //     }
+    //   })
+    // );
+  }
+
+  getJWT(): string | null {
+    return window.sessionStorage.getItem(environment.JWT_KEY);
+  }
+
+  public saveRefresh(token: string): void {
+    window.sessionStorage.removeItem(environment.REFRESH_KEY);
+    window.sessionStorage.setItem(environment.REFRESH_KEY, token);
+  }
+
+  getRefresh(): string | undefined {
+    return window.sessionStorage.getItem(environment.REFRESH_KEY) || undefined;
+  }
+
+  refreshToken(refreshToken?: string): Observable<IJwt> {
+    if (!refreshToken) {
+      refreshToken = this.getRefresh();
+    }
+    return this.httpClient.get<IJwt>(`${environment.apiUrl}/auth/refresh`, {
+      ...httpOptions,
+      params: new HttpParams().set('token', refreshToken || ''),
+    });
   }
 }

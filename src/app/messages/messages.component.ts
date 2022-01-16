@@ -1,11 +1,17 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { RxStompService } from '@stomp/ng2-stompjs';
 import { RxStompState } from '@stomp/rx-stomp';
 import { IFrame, Message } from '@stomp/stompjs';
-import { Observable, Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { EMPTY, Observable, Subscription } from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  startWith,
+  tap,
+} from 'rxjs/operators';
 import { SnackbarService } from '../snackbar.service';
 import { IContact, IMessage, SendDTO } from './models/messages.model';
 import { MessagesService } from './services/messages.service';
@@ -49,17 +55,18 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   private page: number = 0;
+  public textControl = new FormControl();
+  public searchText$: Observable<string>;
   private principal: string = '';
-  public selectedUser: string = '';
+  public selectedUser: IContact = { name: '', email: '', online: false };
   public endOfConversation: boolean = false;
   public receivedMessages: IMessage[] = [];
-  public users: IContact[] = [];
+  public users$: Observable<IContact[]>;
   public connectionStatus$: Observable<string>;
   public upload: Upload | null = null;
   public download$: Observable<Download> | null = null;
   public selectedToDownload: number = -1;
   private conversationSubscription: Subscription = new Subscription();
-  private usersSubscription: Subscription = new Subscription();
   private connectedSubscription: Subscription = new Subscription();
   private stompErrorsSubscription: Subscription = new Subscription();
   private uploadSubscription: Subscription = new Subscription();
@@ -68,36 +75,40 @@ export class MessagesComponent implements OnInit, OnDestroy {
     private formBuilder: FormBuilder,
     private rxStompService: RxStompService,
     private snackbarService: SnackbarService,
-    private messagesService: MessagesService,
-    @Inject(DOCUMENT) private document: Document
+    private messagesService: MessagesService
   ) {
     this.connectionStatus$ = rxStompService.connectionState$.pipe(
       map((state) => {
         if (state === 1) {
-          this.rxStompService.publish({
-            destination: '/api/refresh-connected',
-          });
+          // this.rxStompService.publish({
+          //   destination: '/api/refresh-connected',
+          // });
         }
-        if (state === 3) {
-          this.users = [];
-        }
+        // if (state === 3) {
+        //   this.users = [];
+        // }
         return RxStompState[state];
       })
     );
+    this.searchText$ = this.textControl.valueChanges.pipe(
+      startWith(''),
+      debounceTime(400),
+      distinctUntilChanged()
+    );
+    this.users$ = EMPTY;
+    // this.users$ = this.rxStompService.watch('/user/queue/lis').pipe(
+    //   map((message: Message) => JSON.parse(message.body)),
+    //   tap((value) => console.log(value))
+    // );
   }
 
   ngOnInit() {
-    this.usersSubscription = this.rxStompService
-      .watch('/user/queue/list')
-      .subscribe((message: Message) => {
-        this.users = JSON.parse(message.body);
-      });
-    this.conversationSubscription = this.rxStompService
-      .watch('/user/queue/conv-' + this.selectedUser)
-      .subscribe((message: Message) => {
-        if (message.body.includes(this.principal))
-          this.receivedMessages.push(JSON.parse(message.body));
-      });
+    // this.conversationSubscription = this.rxStompService
+    //   .watch('/user/queue/conv-' + this.selectedUser.email)
+    //   .subscribe((message: Message) => {
+    //     if (message.body.includes(this.principal))
+    //       this.receivedMessages.push(JSON.parse(message.body));
+    //   });
     this.stompErrorsSubscription = this.rxStompService.stompErrors$.subscribe(
       (frame: IFrame) => this.snackbarService.error(frame.headers['message'])
     );
@@ -105,7 +116,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.conversationSubscription?.unsubscribe();
-    this.usersSubscription?.unsubscribe();
     this.connectedSubscription?.unsubscribe();
     this.stompErrorsSubscription?.unsubscribe();
     this.uploadSubscription?.unsubscribe();
@@ -132,7 +142,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   onSendGeneratedMessage() {
     const message: SendDTO = {
       text: `Message generated at ${new Date()}`,
-      user: this.selectedUser,
+      user: this.selectedUser.email,
       attachmentIds: this.attachmentIds,
     };
     this.rxStompService.publish({
@@ -142,11 +152,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   onSendMessage() {
-    console.log(this.messageForm.value);
     if (!this.text.length && !this.attachmentIds.length) return;
     const message: SendDTO = {
       text: this.text,
-      user: this.selectedUser,
+      user: this.selectedUser.email,
       attachmentIds: this.attachmentIds,
     };
     this.rxStompService.publish({
@@ -165,20 +174,20 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.upload = null;
   }
 
-  selectUser(user: string) {
+  selectUser(user: IContact) {
     this.page = 0;
     this.endOfConversation = false;
     this.receivedMessages = [];
     this.selectedUser = user;
     this.conversationSubscription.unsubscribe();
-    this.conversationSubscription = this.rxStompService
-      .watch('/user/queue/conv-' + this.selectedUser)
-      .subscribe((message: Message) => {
-        if (message.body.includes(this.principal))
-          this.receivedMessages.push(JSON.parse(message.body));
-      });
+    // this.conversationSubscription = this.rxStompService
+    //   .watch('/user/queue/conv' + this.selectedUser.email)
+    //   .subscribe((message: Message) => {
+    //     if (message.body.includes(this.principal))
+    //       this.receivedMessages.push(JSON.parse(message.body));
+    //   });
     this.messagesService
-      .getConversation(this.selectedUser, this.page)
+      .getConversation(this.selectedUser.email, this.page)
       .subscribe(
         (data) => {
           this.receivedMessages = data.reverse().concat(this.receivedMessages);
@@ -195,7 +204,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   loadMore() {
     this.page++;
     this.messagesService
-      .getConversation(this.selectedUser, this.page)
+      .getConversation(this.selectedUser.email, this.page)
       .subscribe(
         (data) => {
           this.receivedMessages = data.reverse().concat(this.receivedMessages);
@@ -213,4 +222,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.download$ = this.messagesService.download(id, filename);
     this.selectedToDownload = i;
   }
+
+  searchFriends(text: string) {}
 }

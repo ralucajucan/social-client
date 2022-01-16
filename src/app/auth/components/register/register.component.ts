@@ -84,7 +84,6 @@ export class RegisterComponent implements OnDestroy {
         birthDate: formatDate(this.birthDate?.value, 'yyyy-MM-dd', 'en-US'),
       };
 
-      console.log(registerData);
       this.authService.register(registerData).subscribe(
         (data) => {
           this.snackbarService.success('Registration success!');

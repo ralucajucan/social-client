@@ -14,19 +14,11 @@
 
 html,
 body {
-  // background-color: #e2e2e2;
   background: rgb(67, 198, 172);
   background: linear-gradient(180deg, #d3cce3 0%, #e9e4f0 100%);
   height: 100%;
   margin: 0;
 }
-// body {
-//   margin: 0;
-//   -webkit-font-smoothing: antialiased;
-//   -moz-osx-font-smoothing: grayscale;
-//   text-rendering: optimizeLegibility;
-//   font-family: "Raleway", Sans-serif;
-// }
 .error-snackbar {
   background-color: $warn-default;
   color: $warn-default-contrast;
@@ -51,4 +43,16 @@ body {
   button {
     color: #fff;
   }
+}
+
+.mat-form-field-appearance-outline .mat-form-field-outline {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.mat-stroked-button:not(.mat-button-disabled) {
+  border-color: $primary-default;
+}
+
+.mat-expansion-panel-header {
+  padding: 0 8px;
 }

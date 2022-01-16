@@ -1,10 +1,8 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { SnackbarService } from 'src/app/snackbar.service';
-import { ILogin } from '../../models/auth.model';
-import { AuthService } from '../../services/auth.service';
+import { Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import * as authActions from 'src/app/store/actions/auth.actions';
 
 @Component({
   selector: 'app-login',
@@ -22,9 +20,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   constructor(
     private formBuilder: FormBuilder,
-    private authService: AuthService,
-    private router: Router,
-    private snackbarService: SnackbarService
+    private store: Store<AppState>
   ) {}
 
   get email() {
@@ -37,7 +33,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     if (history.state?.error) {
-      console.log(history.state?.error);
       this.error =
         history.state.error?.status + ':' + history.state.error?.message;
     }
@@ -48,22 +43,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   onSubmit() {
-    console.log(this.loginForm);
-    this.authService
-      .login({
+    this.store.dispatch(
+      authActions.loginStart({
         email: this.email?.value,
         password: this.password?.value,
-      } as ILogin)
-      .subscribe(
-        (data) => {
-          console.log(data);
-          this.router.navigate(['/messages']);
-        },
-        (error) => {
-          this.snackbarService.error(error.error);
-          this.error = error.status + ':' + error.error;
-        }
-      );
+      })
+    );
   }
 
   getEmailErrorMessage() {

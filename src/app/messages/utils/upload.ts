@@ -41,8 +41,6 @@ export function upload(): (
       };
     }
     if (isHttpResponse(event)) {
-      console.log(event);
-      console.log(event.body);
       return {
         progress: 100,
         state: 'DONE',

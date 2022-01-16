@@ -38,7 +38,6 @@ export class MessagesService {
       .pipe(upload());
   }
   download(id: string, filename: string): Observable<any> {
-    console.log(id);
     return this.httpClient
       .get(`${environment.apiUrl}/message/download/${id}`, {
         reportProgress: true,

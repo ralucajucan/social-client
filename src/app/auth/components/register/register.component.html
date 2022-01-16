@@ -92,19 +92,15 @@
           <mat-datepicker #datePicker></mat-datepicker>
         </mat-form-field>
         <button
-          mat-raised-button
-          class="reset-button"
+          mat-stroked-button
+          class="back-button"
+          color="primary"
           type="button"
-          (click)="this.registerForm.reset()"
+          routerLink="../login"
         >
-          Resetare
+          Înapoi
         </button>
-        <button
-          mat-raised-button
-          class="submit-button"
-          color="accent"
-          type="submit"
-        >
+        <button mat-flat-button color="primary" type="submit">
           Confirmare
         </button>
       </form>

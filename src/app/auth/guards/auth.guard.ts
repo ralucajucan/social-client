@@ -6,14 +6,13 @@ import {
   RouterStateSnapshot,
 } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { SessionService } from '../services/session.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
-  constructor(private router: Router, private sessionService: SessionService) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    if (this.sessionService.getJWT() && this.sessionService.getRefresh()) {
+    if (this.authService.getJWT() && this.authService.getRefresh()) {
       return true;
     } else {
       this.router.navigate(['/login']);

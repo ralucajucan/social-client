@@ -3,10 +3,11 @@
     <mat-icon>email</mat-icon> Mesagerie
   </button>
   <button mat-button routerLink="/profile" routerLinkActive="selected">
-    <mat-icon>person</mat-icon> Profil
+    <app-avatar [name]="(name | async) || ''" [size]="25"></app-avatar> Profil
   </button>
-  <button mat-button><mat-icon>search</mat-icon> Căutare</button>
+  <!-- <button mat-button><mat-icon>search</mat-icon> Căutare</button> -->
   <span class="spacer"></span>
+
   <button mat-icon-button [matMenuTriggerFor]="settings">
     <mat-icon>settings</mat-icon>
   </button>
@@ -14,3 +15,4 @@
     <button mat-menu-item (click)="onLogout()">Deconectare</button>
   </mat-menu>
 </mat-toolbar>
+<mat-divider color="primary"></mat-divider>

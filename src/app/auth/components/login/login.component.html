@@ -40,18 +40,18 @@
           <mat-error>Obligatoriu</mat-error>
         </mat-form-field>
         <button
-          mat-raised-button
+          mat-stroked-button
+          color="primary"
           [disabled]="loginForm.invalid"
           class="submit-button"
-          color="primary"
           type="submit"
         >
           Confirmare
         </button>
         <button
           type="button"
-          mat-raised-button
-          color="accent"
+          mat-flat-button
+          color="primary"
           routerLink="../register"
         >
           Înregistrare

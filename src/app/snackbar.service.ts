@@ -11,7 +11,7 @@ export class SnackbarService {
 
   private openSnackBar(message: string, action: string, panelClass: string) {
     this._snackBar.open(message, action, {
-      duration: 10000,
+      duration: 2000,
       panelClass: panelClass,
     });
   }

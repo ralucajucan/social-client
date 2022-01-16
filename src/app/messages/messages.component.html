@@ -2,44 +2,68 @@
 
 <mat-sidenav-container>
   <mat-sidenav mode="side" opened>
-    <app-status [status]="connectionStatus$ | async"></app-status>
-    <mat-action-list
+    <form class="search-form">
+      <mat-form-field class="example-full-width">
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Cautare prieteni..."
+          aria-label="Number"
+          matInput
+          [formControl]="textControl"
+        />
+      </mat-form-field>
+    </form>
+    {{ searchText$ | async }}
+
+    <mat-selection-list
       *ngIf="
-        (connectionStatus$ | async) === 'OPEN' && users !== [];
-        else notConnected
+        (connectionStatus$ | async) === 'OPEN' && (users$ | async) !== [];
+        else notFound
       "
+      #contacts
+      [multiple]="false"
     >
-      <h3 mat-subheader>Grupuri</h3>
-      <h3 mat-subheader>Contacte</h3>
-      <button
-        mat-list-item
-        (click)="selectUser(user.email)"
-        *ngFor="let user of users; last as last"
+      <mat-list-option
+        (click)="selectUser(user)"
+        *ngFor="let user of users$ | async; last as last"
+        [value]="user"
       >
-        <div
+        <app-avatar
           mat-list-avatar
-          matBadge="0"
-          matBadgePosition="above after"
-          matBadgeSize="small"
-          [matBadgeColor]="user.online ? 'accent' : 'warn'"
-          class="hide-text"
-        >
-          <ng-boring-avatars-beam-avatar
-            [name]="user.name"
-            [colors]="['#172C3C', '#274862', '#995052', '#D96831', '#E6B33D']"
-            [inputSize]="40"
-          ></ng-boring-avatars-beam-avatar>
-        </div>
+          [name]="user.name"
+          [badge]="true"
+          [online]="user.online"
+        ></app-avatar>
         <h4 mat-line [matTooltip]="user.name">{{ user.name }}</h4>
         <span mat-line [matTooltip]="user.email">{{ user.email }}</span>
         <mat-divider [inset]="true" *ngIf="!last"></mat-divider>
-      </button>
-    </mat-action-list>
-    <ng-template #notConnected>Nu sunteti conectat!</ng-template>
+      </mat-list-option>
+    </mat-selection-list>
+    <ng-template #notFound>
+      <ng-container *ngIf="(searchText$ | async) !== ''; else notConnected"
+        >Nu sunt rezultate.</ng-container
+      >
+    </ng-template>
+    <ng-template #notConnected
+      ><mat-icon color="warn">warning</mat-icon>Nu sunteti
+      conectat!</ng-template
+    >
+    <app-status [status]="connectionStatus$ | async"></app-status>
   </mat-sidenav>
 
-  <mat-sidenav-content>
-    <div class="messages-list" *ngIf="selectedUser !== ''">
+  <mat-sidenav-content *ngIf="selectedUser.email !== ''">
+    <div class="messages-contact">
+      <app-avatar
+        mat-list-avatar
+        [name]="selectedUser.name"
+        [badge]="true"
+        [online]="selectedUser.online"
+      ></app-avatar>
+      <h2>{{ selectedUser.name }}</h2>
+    </div>
+
+    <div class="messages-list">
       <mat-list>
         <mat-list-item>
           <button
@@ -52,12 +76,9 @@
           <ng-template #endConv>Sfârșitul conversației</ng-template>
         </mat-list-item>
         <mat-list-item *ngFor="let message of receivedMessages; let i = index">
-          <ng-boring-avatars-beam-avatar
-            mat-list-avatar
-            [name]="message.sender | emailBase: users"
-            [colors]="['#172C3C', '#274862', '#995052', '#D96831', '#E6B33D']"
-            [inputSize]="40"
-          ></ng-boring-avatars-beam-avatar>
+          <app-avatar
+            [name]="message.sender | emailBase: (users$ | async)"
+          ></app-avatar>
           <div>
             <mat-card class="mat-elevation-z0"
               ><button
@@ -91,18 +112,18 @@
       </mat-list>
     </div>
 
-    <div class="messages-input" *ngIf="selectedUser !== ''">
+    <div class="messages-input">
       <mat-divider></mat-divider>
-      <mat-card>
-        <form [formGroup]="messageForm" (ngSubmit)="onSendMessage()">
-          <mat-label>File</mat-label>
+      <form [formGroup]="messageForm" (ngSubmit)="onSendMessage()">
+        <div class="messages-input-top">
           <button
             class="file-button"
-            mat-raised-button
+            mat-stroked-button
             type="button"
             (click)="fileInput.click()"
           >
-            {{ file ? file.name : "Select" }}
+            <mat-icon *ngIf="!file">attach_file</mat-icon
+            >{{ file ? file.name : "Fișier" }}
             <mat-progress-bar
               *ngIf="upload"
               [mode]="upload.state == 'PENDING' ? 'buffer' : 'determinate'"
@@ -117,22 +138,26 @@
             #fileInput
             (change)="onFileInput(fileInput.files)"
           />
-          <mat-form-field appearance="outline">
-            <mat-label>Text</mat-label>
-            <textarea
-              matInput
-              [placeholder]="'Trimiteti mesaj catre ' + selectedUser"
-              id="text"
-              type="text"
-              formControlName="text"
-            ></textarea>
-            <mat-error>Continutul mesajului e gol!</mat-error>
-          </mat-form-field>
           <button mat-icon-button color="primary">
             <mat-icon>send</mat-icon>
           </button>
-        </form>
-      </mat-card>
+        </div>
+        <mat-form-field appearance="outline" class="messages-input-textarea">
+          <mat-label>Trimiteti mesaj catre {{ selectedUser.name }}</mat-label>
+          <textarea
+            matInput
+            cdkTextareaAutosize
+            #autosize="cdkTextareaAutosize"
+            cdkAutosizeMinRows="1"
+            cdkAutosizeMaxRows="5"
+            id="text"
+            type="text"
+            formControlName="text"
+            (keyup.enter)="onSendMessage()"
+          ></textarea>
+          <mat-error>Continutul mesajului e gol!</mat-error>
+        </mat-form-field>
+      </form>
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

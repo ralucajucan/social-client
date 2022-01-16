@@ -1,5 +1,16 @@
 <app-toolbar></app-toolbar>
 
 <div class="container">
-  <mat-card class="mat-elevation-z0"> </mat-card>
+  <mat-card class="mat-elevation-z0">
+    <app-avatar [name]="(firstName | async) + ' ' + (lastName | async)">
+    </app-avatar>
+    <h2>Prenume: {{ firstName | async }}</h2>
+    <h2>Nume: {{ lastName | async }}</h2>
+    <mat-divider></mat-divider>
+    <span
+      >Data nasterii: {{ birthDate | async | date: "longDate" | dateRo }}</span
+    >
+    <br />
+    <span>Biografie: {{ biography | async }}</span>
+  </mat-card>
 </div>

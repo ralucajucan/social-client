@@ -1,0 +1,27 @@
+<!--  "['#172C3C', '#274862', '#995052', '#D96831', '#E6B33D']" -->
+<div
+  *ngIf="badge; else noBadge"
+  matBadge="0"
+  matBadgePosition="above after"
+  matBadgeSize="small"
+  [matBadgeColor]="online ? 'accent' : 'warn'"
+  class="hide-text"
+>
+  <span *ngFor="let _name of [name]">
+    <ng-boring-avatars-beam-avatar
+      [name]="_name"
+      [colors]="['#FFAD08', '#EDD75A', '#73B06F', '#0C8F8F', '#405059']"
+      [inputSize]="size"
+    ></ng-boring-avatars-beam-avatar>
+  </span>
+</div>
+
+<ng-template #noBadge>
+  <span *ngFor="let _name of [name]">
+    <ng-boring-avatars-beam-avatar
+      [name]="_name"
+      [colors]="['#FFAD08', '#EDD75A', '#73B06F', '#0C8F8F', '#405059']"
+      [inputSize]="size"
+    ></ng-boring-avatars-beam-avatar>
+  </span>
+</ng-template>

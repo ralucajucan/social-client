@@ -1,11 +1,23 @@
-export interface IUser {
-  userId: number;
-  email: string;
-  role: string;
+export interface IBasicUser {
+  id: number;
+  name: string;
 }
 
-export interface ILoginResponse extends IUser {
+export interface IUser {
+  id: number;
+  role: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  biography: string;
+}
+
+export interface IJwt extends IUser {
   jwtToken: string;
+}
+
+export interface IAuth extends IJwt {
   refreshToken: string;
 }
 
@@ -14,14 +26,8 @@ export interface ILogin {
   password: string;
 }
 
-export interface IRegister {
+export interface IRegister extends ILogin {
   firstName: string;
   lastName: string;
-  email: string;
-  password: string;
   birthDate: string;
-}
-
-export interface JWTResponse {
-  token: string;
 }

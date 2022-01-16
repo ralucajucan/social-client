@@ -9,21 +9,26 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from './material.module';
 import { HttpClientModule } from '@angular/common/http';
 import { ErrorComponent } from './error/error.component';
-import { appInitializerProviders } from './auth/services/app.initializer';
 import { authInterceptorProviders } from './auth/services/auth.interceptor';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { MessagesComponent } from './messages/messages.component';
 import { StatusComponent } from './status/status.component';
-import {
-  InjectableRxStompConfig,
-  RxStompService,
-  rxStompServiceFactory,
-} from '@stomp/ng2-stompjs';
-import { myRxStompConfig } from './my-rx-stomp.config';
+import { RxStompService } from '@stomp/ng2-stompjs';
 import { NgBoringAvatarsModule } from 'ng-boring-avatars';
 import { ProfileComponent } from './profile/profile.component';
 import { MarkdownModule } from 'ngx-markdown';
-import { EmailBase } from './messages/services/email.pipe';
+import { EmailBasePipe } from './pipes/email-base.pipe';
+import { AvatarComponent } from './avatar/avatar.component';
+import { EffectsModule } from '@ngrx/effects';
+import { AuthEffects } from './store/effects/auth.effects';
+import { StoreModule } from '@ngrx/store';
+import { AppReducers } from './store/app.state';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { environment } from 'src/environments/environment';
+import { DateRoPipe } from './pipes/date-ro.pipe';
+import { SearchComponent } from './search/search.component';
+import { MessagesSidenavComponent } from './messages/components/messages-sidenav/messages-sidenav.component';
+import { WsEffects } from './store/effects/ws.effects';
 
 @NgModule({
   declarations: [
@@ -35,7 +40,11 @@ import { EmailBase } from './messages/services/email.pipe';
     ProfileComponent,
     MessagesComponent,
     StatusComponent,
-    EmailBase,
+    EmailBasePipe,
+    DateRoPipe,
+    AvatarComponent,
+    SearchComponent,
+    MessagesSidenavComponent,
   ],
   imports: [
     MaterialModule,
@@ -46,20 +55,16 @@ import { EmailBase } from './messages/services/email.pipe';
     HttpClientModule,
     NgBoringAvatarsModule,
     MarkdownModule.forRoot(),
+    StoreModule.forRoot(AppReducers),
+    StoreDevtoolsModule.instrument({
+      maxAge: 25,
+      logOnly: environment.production,
+      autoPause: true,
+    }),
+    EffectsModule.forRoot([AuthEffects]),
+    EffectsModule.forFeature([WsEffects]),
   ],
-  providers: [
-    authInterceptorProviders,
-    appInitializerProviders,
-    {
-      provide: InjectableRxStompConfig,
-      useValue: myRxStompConfig,
-    },
-    {
-      provide: RxStompService,
-      useFactory: rxStompServiceFactory,
-      deps: [InjectableRxStompConfig],
-    },
-  ],
+  providers: [authInterceptorProviders, RxStompService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
