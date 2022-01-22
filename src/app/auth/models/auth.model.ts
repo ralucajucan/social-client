@@ -31,3 +31,8 @@ export interface IRegister extends ILogin {
   lastName: string;
   birthDate: string;
 }
+
+export interface INewPassword {
+  oldPassword: string;
+  password: string;
+}

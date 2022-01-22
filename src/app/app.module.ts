@@ -28,9 +28,12 @@ import { environment } from 'src/environments/environment';
 import { DateRoPipe } from './pipes/date-ro.pipe';
 import { SearchComponent } from './search/search.component';
 import { WsEffects } from './store/effects/ws.effects';
+import { SafeHtmlPipe } from './pipes/safe-html.pipe';
+import { ValidFilePipe } from './pipes/valid-file.pipe';
+import { AdminComponent } from './admin/admin.component';
 
 @NgModule({
-  declarations: [
+  declarations: [	
     AppComponent,
     LoginComponent,
     RegisterComponent,
@@ -43,7 +46,10 @@ import { WsEffects } from './store/effects/ws.effects';
     DateRoPipe,
     AvatarComponent,
     SearchComponent,
-  ],
+    SafeHtmlPipe,
+    ValidFilePipe,
+      AdminComponent
+   ],
   imports: [
     MaterialModule,
     BrowserModule,

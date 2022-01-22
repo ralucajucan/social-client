@@ -3,16 +3,48 @@
     <mat-icon>email</mat-icon> Mesagerie
   </button>
   <button mat-button routerLink="/profile" routerLinkActive="selected">
-    <app-avatar [name]="(name | async) || ''" [size]="25"></app-avatar> Profil
+    <app-avatar [name]="(name$ | async) || ''" [size]="25"></app-avatar> Profil
   </button>
-  <!-- <button mat-button><mat-icon>search</mat-icon> Căutare</button> -->
+  <button
+    class="admin"
+    mat-button
+    *ngIf="isAdmin$ | async"
+    routerLink="/admin"
+    routerLinkActive="selected"
+  >
+    <mat-icon>admin_panel_settings</mat-icon> Setări admin
+  </button>
   <span class="spacer"></span>
-
+  <button mat-icon-button [matMenuTriggerFor]="notifications">
+    <mat-icon
+      [matBadge]="(notification$ | async)?.length || ''"
+      matBadgePosition="above after"
+      matBadgeColor="primary"
+      >notifications</mat-icon
+    >
+  </button>
   <button mat-icon-button [matMenuTriggerFor]="settings">
     <mat-icon>settings</mat-icon>
   </button>
   <mat-menu #settings="matMenu">
     <button mat-menu-item (click)="onLogout()">Deconectare</button>
+  </mat-menu>
+  <mat-menu #notifications="matMenu" style="font-size: 12px">
+    <button
+      mat-menu-item
+      (click)="clearNotifications()"
+      style="color: darkviolet"
+    >
+      Sterge notificarile
+    </button>
+    <span
+      mat-menu-item
+      *ngFor="let notification of notification$ | async"
+      (click)="goToMessage(notification)"
+    >
+      <b>{{ notification.sender }}</b
+      >: {{ notification.text }}
+    </span>
   </mat-menu>
 </mat-toolbar>
 <mat-divider color="primary"></mat-divider>

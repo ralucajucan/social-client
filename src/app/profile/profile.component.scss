@@ -5,4 +5,22 @@ div.container {
   justify-content: center;
   padding: 1vh 1vw;
   margin: 0;
+  mat-card {
+    min-width: 50vw;
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.edit-header {
+  display: flex;
+  justify-content: space-between;
+  .button-container {
+    display: flex;
+    gap: 1rem;
+  }
 }

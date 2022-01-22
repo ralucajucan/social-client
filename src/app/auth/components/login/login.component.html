@@ -56,10 +56,33 @@
         >
           Înregistrare
         </button>
+        <mat-error
+          ><span *ngIf="!(emailError$ | async) && !(credentialsError$ | async)"
+            ><b>{{ error$ | async }}</b></span
+          ></mat-error
+        >
+        <span *ngIf="emailSent$ | async" style="color: green"
+          ><b>Mesaj trimis cu success!</b></span
+        >
+        <button
+          mat-button
+          *ngIf="emailError$ | async"
+          type="button"
+          color="warn"
+          (click)="resendEmail()"
+        >
+          Request new email
+        </button>
+        <button
+          mat-button
+          *ngIf="credentialsError$ | async"
+          type="button"
+          color="warn"
+          (click)="resetPassword()"
+        >
+          Request new password
+        </button>
       </form>
     </mat-card-content>
-    <mat-card-footer *ngIf="error">
-      {{ error }}
-    </mat-card-footer>
   </mat-card>
 </div>

@@ -1,24 +1,25 @@
-import { DOCUMENT } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { select, Store } from '@ngrx/store';
 import { RxStompService } from '@stomp/ng2-stompjs';
 import { RxStompState } from '@stomp/rx-stomp';
-import { IFrame, Message } from '@stomp/stompjs';
-import { EMPTY, Observable, Subscription } from 'rxjs';
+import { Observable, pipe, Subscription } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
   map,
   startWith,
+  switchMap,
+  take,
+  takeWhile,
   tap,
 } from 'rxjs/operators';
-import { SnackbarService } from '../snackbar.service';
 import { AppState } from '../store/app.state';
 import { IContact, IMessage, SendDTO } from './models/messages.model';
 import { MessagesService } from './services/messages.service';
 import { Download } from './utils/download';
 import { Upload } from './utils/upload';
+import * as WsActions from 'src/app/store/actions/ws.actions';
 
 const MEDIUMBLOB_SIZE = 16777215; // storage size chosen in MySQL
 
@@ -56,20 +57,18 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.messageForm.patchValue({ attachmentIds: ids });
   }
 
-  private page: number = 0;
   public textControl = new FormControl();
-  public searchText$: Observable<string>;
-  public selectedUser: IContact = {
-    name: '',
-    email: '',
-    online: false,
-    newMessages: 0,
-  };
-  public endOfConversation: boolean = false;
-  public receivedMessages: IMessage[] = [];
-  public users$: Observable<IContact[]>;
+  public search: string = '';
+  public searchTextSubscription: Subscription = new Subscription();
+  public unfilteredUsers: IContact[] = [];
+  public users: IContact[] = [];
+  public usersSubscription: Subscription;
+  public selected$: Observable<IContact>;
+  public received$: Observable<IMessage[]>;
+  public endOfMessages$: Observable<boolean>;
   public connectionStatus$: Observable<string>;
   public upload: Upload | null = null;
+  public download: Download | null = null;
   public download$: Observable<Download> | null = null;
   public selectedToDownload: number = -1;
   private uploadSubscription: Subscription = new Subscription();
@@ -77,7 +76,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
   constructor(
     private formBuilder: FormBuilder,
     private rxStompService: RxStompService,
-    private snackbarService: SnackbarService,
     private messagesService: MessagesService,
     private store: Store<AppState>
   ) {
@@ -86,18 +84,45 @@ export class MessagesComponent implements OnInit, OnDestroy {
         return RxStompState[state];
       })
     );
-    this.searchText$ = this.textControl.valueChanges.pipe(
-      startWith(''),
-      debounceTime(400),
-      distinctUntilChanged()
+    this.searchTextSubscription = this.textControl.valueChanges
+      .pipe(
+        startWith(''),
+        debounceTime(400),
+        map((value) => value.trim().toLowerCase()),
+        distinctUntilChanged(),
+        tap((value) => {
+          this.users = this.unfilteredUsers.filter((user) => {
+            return user.name.concat(user.email).toLowerCase().includes(value);
+          });
+          this.search = value;
+        })
+      )
+      .subscribe();
+    this.usersSubscription = this.store
+      .pipe(
+        select((state) => state.ws.users),
+        tap((users) => {
+          this.unfilteredUsers = users;
+          this.users = users.filter((user) =>
+            user.name.concat(user.email).toLowerCase().includes(this.search)
+          );
+        })
+      )
+      .subscribe();
+
+    this.selected$ = this.store.pipe(select((state) => state.ws.selected));
+    this.received$ = this.store.pipe(select((state) => state.ws.received));
+    this.endOfMessages$ = this.store.pipe(
+      select((state) => state.ws.endOfMessages)
     );
-    this.users$ = this.store.pipe(select((state) => state.ws.users));
   }
 
   ngOnInit() {}
 
   ngOnDestroy() {
     this.uploadSubscription?.unsubscribe();
+    this.searchTextSubscription?.unsubscribe();
+    //TODO: make call to service to delete file if not sent
   }
 
   onFileInput(files: FileList | null): void {
@@ -106,41 +131,38 @@ export class MessagesComponent implements OnInit, OnDestroy {
       if (this.file) {
         this.uploadSubscription = this.messagesService
           .upload(this.file)
-          .subscribe((data: Upload) => {
-            this.upload = data;
-            if (data.state == 'DONE' && data.id.length) {
-              this.attachmentIds += this.attachmentIds.length
-                ? ','.concat(data.id)
-                : data.id;
+          .subscribe(
+            (data: Upload) => {
+              this.upload = data;
+              if (data.state == 'DONE' && data.id.length) {
+                this.attachmentIds += this.attachmentIds.length
+                  ? ','.concat(data.id)
+                  : data.id;
+              }
+            },
+            (error) => {
+              console.log(error);
             }
-          });
+          );
       }
     }
   }
+  remove() {}
 
-  onSendGeneratedMessage() {
-    const message: SendDTO = {
-      text: `Message generated at ${new Date()}`,
-      user: this.selectedUser.email,
-      attachmentIds: this.attachmentIds,
-    };
-    this.rxStompService.publish({
-      destination: '/api/message',
-      body: JSON.stringify(message),
-    });
-  }
-
-  onSendMessage() {
+  onSendMessage(event: Event) {
+    console.log(event);
+    event.stopPropagation();
     if (!this.text.length && !this.attachmentIds.length) return;
-    const message: SendDTO = {
+    let message: SendDTO = {
       text: this.text,
-      user: this.selectedUser.email,
+      user: '',
       attachmentIds: this.attachmentIds,
     };
-    this.rxStompService.publish({
-      destination: '/api/message',
-      body: JSON.stringify(message),
-    });
+    const sub = this.selected$
+      .pipe(take(1))
+      .subscribe((selected) => (message.user = selected.email));
+    sub.unsubscribe();
+    this.store.dispatch(WsActions.sendMessage({ message }));
 
     this.messageForm.reset({
       text: '',
@@ -154,46 +176,23 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   selectUser(user: IContact) {
-    this.page = 0;
-    this.endOfConversation = false;
-    this.receivedMessages = [];
-    this.selectedUser = user;
-    this.messagesService
-      .getConversation(this.selectedUser.email, this.page)
-      .subscribe(
-        (data) => {
-          this.receivedMessages = data.reverse().concat(this.receivedMessages);
-          if (data.length < 10) {
-            this.endOfConversation = true;
-          }
-        },
-        (error) => {
-          this.snackbarService.error(error.error);
-        }
-      );
+    this.store.dispatch(WsActions.select({ selection: user }));
   }
 
   loadMore() {
-    this.page++;
-    this.messagesService
-      .getConversation(this.selectedUser.email, this.page)
-      .subscribe(
-        (data) => {
-          this.receivedMessages = data.reverse().concat(this.receivedMessages);
-          if (data.length < 10) {
-            this.endOfConversation = true;
-          }
-        },
-        (error) => {
-          this.snackbarService.error(error.error);
-        }
-      );
+    this.store.dispatch(WsActions.loadNextPageStart());
   }
 
-  download(id: string, filename: string, i: number) {
-    this.download$ = this.messagesService.download(id, filename);
+  downloadStart(id: string, filename: string, i: number) {
+    const downloadSubscription = this.messagesService
+      .download(id, filename)
+      .pipe(takeWhile((value) => value.state !== 'DONE'))
+      .subscribe((data) => (this.download = data));
+    downloadSubscription.unsubscribe;
     this.selectedToDownload = i;
   }
 
-  searchFriends(text: string) {}
+  removeMessage(message: IMessage) {}
+
+  editMessage(message: IMessage) {}
 }

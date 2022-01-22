@@ -1,3 +1,8 @@
+export interface INotification {
+  sender: string;
+  text: string;
+  attachments: string;
+}
 export interface IMessage {
   id: number;
   sender: string;
@@ -6,8 +11,8 @@ export interface IMessage {
   attachmentIds: string;
   attachments: IFile[];
   status: 'DRAFT' | 'SENT' | 'RECEIVED' | 'READ' | 'REMOVED';
+  edited: boolean;
   createdOn: string;
-  sentOn: string;
   updatedOn: string;
 }
 
@@ -29,5 +34,5 @@ export interface IContact {
   email: string;
   name: string;
   online: boolean;
-  newMessages: number;
+  received: number;
 }

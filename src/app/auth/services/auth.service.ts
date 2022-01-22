@@ -1,8 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { IAuth, IJwt, ILogin, IRegister, IUser } from '../models/auth.model';
+import {
+  IAuth,
+  IJwt,
+  ILogin,
+  INewPassword,
+  IRegister,
+  IUser,
+} from '../models/auth.model';
 import { environment } from 'src/environments/environment';
 import { RxStompService, StompHeaders } from '@stomp/ng2-stompjs';
 import { myRxStompConfig } from 'src/app/my-rx-stomp.config';
@@ -52,13 +59,6 @@ export class AuthService {
     window.sessionStorage.setItem(environment.JWT_KEY, token);
     this.rxStompService.configure(myRxStompConfig);
     this.rxStompService.activate();
-    // this.rxStompService.serverHeaders$.pipe(
-    //   tap(async (headers: StompHeaders) => {
-    //     if (!headers.hasOwnProperty('user-name')) {
-    //       this.rxStompService.stompClient.forceDisconnect();
-    //     }
-    //   })
-    // );
   }
 
   getJWT(): string | null {
@@ -82,5 +82,31 @@ export class AuthService {
       ...httpOptions,
       params: new HttpParams().set('token', refreshToken || ''),
     });
+  }
+
+  requestEmail(email: string): Observable<any> {
+    return this.httpClient
+      .get(`${environment.apiUrl}/auth/resend`, {
+        ...httpOptions,
+        params: new HttpParams().set('email', email || ''),
+      })
+      .pipe(map((value) => !!value));
+  }
+
+  requestPassword(email: string): Observable<any> {
+    return this.httpClient
+      .get(`${environment.apiUrl}/auth/resend-password`, {
+        ...httpOptions,
+        params: new HttpParams().set('email', email || ''),
+      })
+      .pipe(map((value) => !!value));
+  }
+
+  changePassword(request: INewPassword, id: number) {
+    return this.httpClient.post(
+      `${environment.apiUrl}/user/password`,
+      { ...request, id },
+      httpOptions
+    );
   }
 }

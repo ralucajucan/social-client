@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   Actions,
+  concatLatestFrom,
   createEffect,
   ofType,
   ROOT_EFFECTS_INIT,
@@ -9,13 +10,16 @@ import {
 import { Message } from '@stomp/stompjs';
 import { RxStompService } from '@stomp/ng2-stompjs';
 import { EMPTY, of } from 'rxjs';
-import { map, catchError, exhaustMap, tap } from 'rxjs/operators';
+import { map, catchError, exhaustMap, tap, switchMap } from 'rxjs/operators';
 import { ILogin, IUser } from 'src/app/auth/models/auth.model';
 import { AuthService } from 'src/app/auth/services/auth.service';
 import { SnackbarService } from 'src/app/snackbar.service';
 import * as AuthActions from '../actions/auth.actions';
 import * as WsActions from '../actions/ws.actions';
 import { IContact } from 'src/app/messages/models/messages.model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { select, Store } from '@ngrx/store';
+import { AppState } from '../app.state';
 
 @Injectable()
 export class AuthEffects {
@@ -33,10 +37,8 @@ export class AuthEffects {
         this.authService.login({ ...action } as ILogin).pipe(
           map((user) => AuthActions.loginSuccess({ user })),
           tap(() => this.router.navigate(['/messages'])),
-          catchError((error) => {
-            this.snackbarService.error(error.error);
-            AuthActions.loginFail({ ...error.error });
-            return EMPTY;
+          catchError((error: HttpErrorResponse) => {
+            return of(AuthActions.loginFail({ error: error.error }));
           })
         )
       )
@@ -58,7 +60,8 @@ export class AuthEffects {
   refreshToken$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.refreshAuth),
-      exhaustMap(() =>
+      tap(() => console.log('HERE BITCH')),
+      switchMap(() =>
         this.authService.refreshToken().pipe(
           map(({ jwtToken, ...user }) => {
             this.authService.saveJWT(jwtToken);
@@ -66,8 +69,6 @@ export class AuthEffects {
           }),
           catchError((error) => {
             this.snackbarService.error(error.error);
-            // this.authService.logout();
-            // this.router.navigate(['/login']);
             return of(AuthActions.logout());
           })
         )
@@ -75,26 +76,61 @@ export class AuthEffects {
     )
   );
 
-  // loginSuccess$ = createEffect(() =>
-  //   this.actions$.pipe(
-  //     ofType(AuthActions.loginSuccess),
-  //     exhaustMap(() =>
-  //       this.rxStompService.watch('/user/queue/list').pipe(
-  //         map((message: Message) => {
-  //           return WsActions.receivedUsers({
-  //             users: JSON.parse(message.body) as IContact[],
-  //           });
-  //         })
-  //       )
-  //     )
-  //   )
-  // );
+  emailRegisterToken$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.emailRegisterStart),
+      exhaustMap((action) =>
+        this.authService.requestEmail(action.email).pipe(
+          map(() => AuthActions.emailRegisterSuccess()),
+          catchError((error) =>
+            of(AuthActions.emailRegisterFail({ error: error.error }))
+          )
+        )
+      )
+    )
+  );
+
+  emailPassword$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.emailPasswordStart),
+      exhaustMap((action) =>
+        this.authService.requestPassword(action.email).pipe(
+          map(() => AuthActions.emailPasswordSuccess()),
+          catchError((error) =>
+            of(AuthActions.emailPasswordFail({ error: error.error }))
+          )
+        )
+      )
+    )
+  );
+
+  newPassword$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.newPasswordStart),
+      concatLatestFrom((action) =>
+        this.store.pipe(select((state) => state.auth.id))
+      ),
+      exhaustMap(([action, id]) =>
+        this.authService.changePassword(action.request, id).pipe(
+          map(() => {
+            this.snackbarService.success('Parola salvata cu success!');
+            return AuthActions.newPasswordSuccess();
+          }),
+          catchError((error) => {
+            this.snackbarService.error(error.error);
+            return of(AuthActions.newPasswordFail({ error: error.error }));
+          })
+        )
+      )
+    )
+  );
 
   constructor(
     private actions$: Actions,
     private authService: AuthService,
     private snackbarService: SnackbarService,
     private rxStompService: RxStompService,
-    private router: Router
+    private router: Router,
+    private store: Store<AppState>
   ) {}
 }

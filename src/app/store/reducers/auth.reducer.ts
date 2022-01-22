@@ -1,3 +1,4 @@
+import { state } from '@angular/animations';
 import { createReducer, on } from '@ngrx/store';
 import * as AuthActions from '../actions/auth.actions';
 import { AuthState } from '../app.state';
@@ -11,17 +12,35 @@ export const initialState: AuthState = {
   birthDate: '',
   biography: '',
   error: '',
-  // users: [],
+  emailSent: false,
 };
 
 export const authReducer = createReducer(
   initialState,
-  on(AuthActions.loginStart, (state) => ({ ...state, error: '' })),
+  on(AuthActions.loginStart, () => ({ ...initialState })),
   on(AuthActions.loginSuccess, (state, { user }) => ({ ...state, ...user })),
+  on(AuthActions.loginFail, (state, { error }) => ({ ...state, error: error })),
   on(AuthActions.logout, (state) => ({ ...state, ...initialState })),
-  on(AuthActions.loginFail, (state, { error }) => ({ ...state, error: error }))
-  // on(AuthActions.receivedUsers, (state, { users }) => ({
-  //   ...state,
-  //   users: users,
-  // }))
+  on(AuthActions.emailRegisterStart, () => ({
+    ...initialState,
+  })),
+  on(AuthActions.emailRegisterSuccess, (state) => ({
+    ...state,
+    emailSent: true,
+  })),
+  on(AuthActions.emailRegisterFail, (state, { error }) => ({
+    ...state,
+    error: error,
+  })),
+  on(AuthActions.emailPasswordStart, () => ({
+    ...initialState,
+  })),
+  on(AuthActions.emailPasswordSuccess, (state) => ({
+    ...state,
+    emailSent: true,
+  })),
+  on(AuthActions.emailPasswordFail, (state, { error }) => ({
+    ...state,
+    error: error,
+  }))
 );

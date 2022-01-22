@@ -62,8 +62,28 @@ mat-sidenav-container {
   justify-content: space-between;
 }
 .file-button {
-  text-overflow: ellipsis;
-  overflow: hidden;
+  display: flex;
+  padding: 0 5px;
+  flex-direction: column;
+  width: 170px;
+  div {
+    display: flex;
+    justify-content: center;
+    span.restricted {
+      display: inline-block;
+      max-width: 125px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    span {
+      display: inline-block;
+    }
+  }
+  img {
+    margin-top: 4px;
+    border: 1px solid darkviolet;
+    border-radius: 5px;
+  }
 }
 
 .messages-contact {
@@ -74,9 +94,37 @@ mat-sidenav-container {
   gap: 1rem;
   padding-top: 1rem;
 }
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
 
 mat-card {
   background-color: rgba($color: white, $alpha: 0.8);
+
+  .message-options {
+    display: none;
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    justify-content: right;
+    border-radius: 10px;
+    .mat-icon-button {
+      height: 25px !important;
+      width: 30px !important;
+      .mat-icon {
+        font-size: 20px !important;
+        vertical-align: top !important;
+      }
+    }
+  }
+  &:hover .message-options {
+    display: flex;
+  }
 }
 
 .search-form {
@@ -89,4 +137,14 @@ mat-card {
 
 ng-template {
   padding-left: 10px;
+}
+
+.search-icon {
+  scale: 1.3;
+  bottom: -5px;
+  position: relative;
+  padding-right: 4px;
+  &.active {
+    color: $primary-default;
+  }
 }

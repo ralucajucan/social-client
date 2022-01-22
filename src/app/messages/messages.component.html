@@ -2,23 +2,27 @@
 
 <mat-sidenav-container>
   <mat-sidenav mode="side" opened>
-    <form class="search-form">
+    <form class="search-form" onSubmit="return false;">
       <mat-form-field class="example-full-width">
-        <mat-icon matPrefix>search</mat-icon>
+        <mat-icon matPrefix class="search-icon" [class.active]="search"
+          >person_search</mat-icon
+        >
         <input
           type="text"
-          placeholder="Cautare prieteni..."
+          placeholder="Căutare persoane..."
           aria-label="Number"
           matInput
           [formControl]="textControl"
         />
       </mat-form-field>
     </form>
-    {{ searchText$ | async }}
+    <!-- {{ searchText$ | async }} -->
+    <!-- {{ users | json }}
+    {{ search | json }} -->
 
     <mat-selection-list
       *ngIf="
-        (connectionStatus$ | async) === 'OPEN' && (users$ | async) !== [];
+        (connectionStatus$ | async) === 'OPEN' && users.length;
         else notFound
       "
       #contacts
@@ -26,7 +30,7 @@
     >
       <mat-list-option
         (click)="selectUser(user)"
-        *ngFor="let user of users$ | async; last as last; index as index"
+        *ngFor="let user of users; last as last; index as index"
         [value]="user"
       >
         <app-avatar
@@ -37,10 +41,13 @@
         ></app-avatar>
 
         <h4 mat-line [matTooltip]="user.name">{{ user.name }}</h4>
-        <span mat-line style="color: darkviolet" *ngIf="index % 2 == 0"
+        <span
+          mat-line
+          style="color: darkviolet"
+          *ngIf="user.received; else noReceived"
           ><mat-icon inline="true">mail</mat-icon> Mesaj nou!</span
         >
-        <ng-template #noNewMessages
+        <ng-template #noReceived
           ><span mat-line [matTooltip]="user.email">{{
             user.email
           }}</span></ng-template
@@ -49,26 +56,31 @@
       </mat-list-option>
     </mat-selection-list>
     <ng-template #notFound>
-      <ng-container *ngIf="(searchText$ | async) !== ''; else notConnected"
-        >Nu sunt rezultate.</ng-container
+      <ng-container *ngIf="search !== ''; else notConnected"
+        ><b
+          ><mat-icon style="padding: 0 8px" color="primary">search_off</mat-icon
+          >Nu sunt rezultate.</b
+        ></ng-container
       >
     </ng-template>
     <ng-template #notConnected
-      ><mat-icon color="warn">warning</mat-icon>Nu sunteti
-      conectat!</ng-template
+      ><b
+        ><mat-icon color="warn" style="padding: 0 8px">warning</mat-icon>Nu
+        sunteti conectat!</b
+      ></ng-template
     >
     <app-status [status]="connectionStatus$ | async"></app-status>
   </mat-sidenav>
 
-  <mat-sidenav-content *ngIf="selectedUser.email !== ''">
+  <mat-sidenav-content *ngIf="(selected$ | async)?.email !== ''">
     <div class="messages-contact">
       <app-avatar
         mat-list-avatar
-        [name]="selectedUser.name"
+        [name]="(selected$ | async)?.name || ''"
         [badge]="true"
-        [online]="selectedUser.online"
+        [online]="(selected$ | async)?.online || false"
       ></app-avatar>
-      <h2>{{ selectedUser.name }}</h2>
+      <h2>{{ (selected$ | async)?.name || "" }}</h2>
     </div>
 
     <div class="messages-list">
@@ -77,61 +89,89 @@
           <button
             mat-button
             (click)="loadMore()"
-            *ngIf="!endOfConversation; else endConv"
+            *ngIf="!(endOfMessages$ | async); else endConv"
           >
             Mai vechi...
           </button>
           <ng-template #endConv>Sfârșitul conversației</ng-template>
         </mat-list-item>
-        <mat-list-item *ngFor="let message of receivedMessages; let i = index">
-          <app-avatar
-            [name]="message.sender | emailBase: (users$ | async)"
-          ></app-avatar>
+        <mat-list-item *ngFor="let message of received$ | async; let i = index">
+          <app-avatar [name]="message.sender | emailBase: users"></app-avatar>
           <div>
-            <mat-card class="mat-elevation-z0"
-              ><button
-                class="file-button"
-                mat-raised-button
+            <mat-card class="mat-elevation-z0">
+              <button
+                class="file-button caption"
+                mat-stroked-button
                 type="button"
                 *ngIf="message.attachments"
                 (click)="
-                  download(
+                  downloadStart(
                     message.attachmentIds,
                     message.attachments[0].name,
                     i
                   )
                 "
               >
-                {{ message.attachments[0].name }}
+                <img
+                  *ngIf="message.attachments[0] | validFile: 'image'"
+                  [src]="
+                    message.attachments[0].file
+                      | safeHtml: message.attachments[0].name
+                  "
+                  alt="Supposed image"
+                  width="155"
+                />
+                <div>
+                  <span class="restricted">{{
+                    message.attachments[0].name.split(".")[0]
+                  }}</span
+                  ><span>
+                    .{{ message.attachments[0].name.split(".")[1] }}</span
+                  >
+                </div>
               </button>
+              <div class="message-options">
+                <button mat-icon-button (click)="removeMessage(message)">
+                  <mat-icon color="primary">delete</mat-icon>
+                </button>
+                <button mat-icon-button (click)="editMessage(message)">
+                  <mat-icon color="primary">edit</mat-icon>
+                </button>
+              </div>
               {{ message.text }}
             </mat-card>
             <mat-progress-bar
-              *ngIf="
-                i === selectedToDownload && (download$ | async) as download
-              "
+              *ngIf="i === selectedToDownload && download"
               [mode]="download.state == 'PENDING' ? 'buffer' : 'determinate'"
               [value]="download.progress"
             >
             </mat-progress-bar>
           </div>
-          <h6>{{ message.createdOn | date: "medium" }}</h6>
+          <h6 class="flex-between">
+            <span>{{ message.createdOn | date: "medium" }}</span>
+            <span>{{ message.status }}</span>
+          </h6>
         </mat-list-item>
       </mat-list>
     </div>
 
     <div class="messages-input">
       <mat-divider></mat-divider>
-      <form [formGroup]="messageForm" (ngSubmit)="onSendMessage()">
+      <form [formGroup]="messageForm" (ngSubmit)="onSendMessage($event)">
         <div class="messages-input-top">
           <button
-            class="file-button"
+            class="file-button caption"
             mat-stroked-button
             type="button"
             (click)="fileInput.click()"
           >
-            <mat-icon *ngIf="!file">attach_file</mat-icon
-            >{{ file ? file.name : "Fișier" }}
+            <div *ngIf="file; else noFile">
+              <span class="restricted">{{ file.name.split(".")[0] }}</span
+              ><span> .{{ file.name.split(".")[1] }}</span>
+            </div>
+            <ng-template #noFile>
+              <mat-icon>attach_file</mat-icon>Fișier
+            </ng-template>
             <mat-progress-bar
               *ngIf="upload"
               [mode]="upload.state == 'PENDING' ? 'buffer' : 'determinate'"
@@ -151,7 +191,10 @@
           </button>
         </div>
         <mat-form-field appearance="outline" class="messages-input-textarea">
-          <mat-label>Trimiteti mesaj catre {{ selectedUser.name }}</mat-label>
+          <mat-label
+            >Trimiteti mesaj catre
+            {{ (selected$ | async)?.name || "" }}</mat-label
+          >
           <textarea
             matInput
             cdkTextareaAutosize
@@ -161,7 +204,7 @@
             id="text"
             type="text"
             formControlName="text"
-            (keyup.enter)="onSendMessage()"
+            (keyup.enter)="onSendMessage($event)"
           ></textarea>
           <mat-error>Continutul mesajului e gol!</mat-error>
         </mat-form-field>

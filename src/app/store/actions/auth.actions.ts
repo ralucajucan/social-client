@@ -1,6 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { IContact } from 'src/app/messages/models/messages.model';
-import { IUser } from '../../auth/models/auth.model';
+import { INewPassword, IUser } from '../../auth/models/auth.model';
 
 export const loginStart = createAction(
   '[Auth] Login Start',
@@ -17,10 +16,47 @@ export const loginFail = createAction(
   props<{ error: string }>()
 );
 
-// export const receivedUsers = createAction(
-//   '[Auth] Ws Received Users',
-//   props<{ users: IContact[] }>()
-// );
+export const emailRegisterStart = createAction(
+  '[Auth] Request new email start',
+  props<{ email: string }>()
+);
+
+export const emailRegisterSuccess = createAction(
+  '[Auth] Request new email success!'
+);
+
+export const emailRegisterFail = createAction(
+  '[Auth] Request new email fail!',
+  props<{ error: string }>()
+);
+
+export const emailPasswordStart = createAction(
+  '[Auth] Email new password start',
+  props<{ email: string }>()
+);
+
+export const emailPasswordSuccess = createAction(
+  '[Auth] Email new password success!'
+);
+
+export const emailPasswordFail = createAction(
+  '[Auth] Email new password fail!',
+  props<{ error: string }>()
+);
+
+export const newPasswordStart = createAction(
+  '[Auth] Request new password start',
+  props<{ request: INewPassword }>()
+);
+
+export const newPasswordSuccess = createAction(
+  '[Auth] Request new password success!'
+);
+
+export const newPasswordFail = createAction(
+  '[Auth] Request new password fail!',
+  props<{ error: string }>()
+);
 
 export const refreshAuth = createAction('[Auth] Refresh Auth');
 

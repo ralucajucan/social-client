@@ -1,9 +1,17 @@
 <app-toolbar></app-toolbar>
 
-<div class="container">
-  <mat-card class="mat-elevation-z0">
-    <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
-    </app-avatar>
+<div class="container" [ngSwitch]="profileView">
+  <mat-card class="mat-elevation-z0" *ngSwitchCase="eView.view">
+    <div style="display: flex; justify-content: space-between">
+      <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
+      </app-avatar>
+      <button mat-stroked-button (click)="switchView(eView.password)">
+        Schimba parola
+      </button>
+      <button mat-stroked-button (click)="switchView(eView.user)">
+        Editeaza
+      </button>
+    </div>
     <h2>Prenume: {{ firstName$ | async }}</h2>
     <h2>Nume: {{ lastName$ | async }}</h2>
     <mat-divider></mat-divider>
@@ -13,4 +21,117 @@
     <br />
     <span>Biografie: {{ biography$ | async }}</span>
   </mat-card>
+
+  <mat-card class="mat-elevation-z0" *ngSwitchCase="eView.user">
+    <form [formGroup]="userForm" (ngSubmit)="onSubmitUser()">
+      <div style="display: flex; justify-content: space-between">
+        <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
+        </app-avatar>
+        <button type="button" (click)="switchView(eView.view)">Renunta</button>
+        <button mat-flat-button color="primary">Salveaza</button>
+      </div>
+    </form>
+
+    <h2>Prenume: {{ firstName$ | async }}</h2>
+    <h2>Nume: {{ lastName$ | async }}</h2>
+    <mat-divider></mat-divider>
+    <span
+      >Data nasterii: {{ birthDate$ | async | date: "longDate" | dateRo }}</span
+    >
+    <br />
+    <span>Biografie: {{ biography$ | async }}</span>
+  </mat-card>
+
+  <mat-card class="mat-elevation-z0" *ngSwitchCase="eView.password">
+    <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+      <div class="edit-header">
+        <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
+        </app-avatar>
+        <div class="button-container">
+          <button
+            mat-button
+            color="primary"
+            type="button"
+            (click)="switchView(eView.view)"
+          >
+            Renunta
+          </button>
+          <button mat-flat-button color="primary" type="submit">
+            Salveaza
+          </button>
+        </div>
+      </div>
+      <mat-form-field appearance="outline">
+        <mat-label for="oldPassword">Parolă</mat-label>
+        <input
+          matInput
+          maxlength="25"
+          id="oldPassword"
+          [type]="hide ? 'password' : 'text'"
+          formControlName="oldPassword"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="hide = !hide"
+          [attr.aria-label]="'Hide password'"
+          [attr.aria-pressed]="hide"
+        >
+          <mat-icon>{{ hide ? "visibility_off" : "visibility" }}</mat-icon>
+        </button>
+        <mat-hint align="end"
+          >{{ oldPassword?.value?.length || 0 }} / 25</mat-hint
+        >
+        <mat-error *ngIf="oldPassword?.invalid">{{
+          getPasswordErrorMessage(oldPassword?.errors)
+        }}</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label for="password">Parolă</mat-label>
+        <input
+          matInput
+          maxlength="25"
+          id="password"
+          [type]="hide ? 'password' : 'text'"
+          formControlName="password"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="hide = !hide"
+          [attr.aria-label]="'Hide password'"
+          [attr.aria-pressed]="hide"
+        >
+          <mat-icon>{{ hide ? "visibility_off" : "visibility" }}</mat-icon>
+        </button>
+        <mat-hint align="end">{{ password?.value?.length || 0 }} / 25</mat-hint>
+        <mat-error *ngIf="password?.invalid">{{
+          getPasswordErrorMessage(password?.errors)
+        }}</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label for="confirmPassword">Confirmă Parola</mat-label>
+        <input
+          matInput
+          maxlength="25"
+          id="confirmPassword"
+          type="password"
+          formControlName="confirmPassword"
+          [errorStateMatcher]="confirmPasswordStateMatcher"
+        />
+        <mat-hint align="end"
+          >{{ confirmPassword?.value?.length || 0 }} / 25</mat-hint
+        >
+        <mat-error *ngIf="this.passwordForm.errors?.distinctPassword">{{
+          getConfirmPasswordErrorMessage()
+        }}</mat-error>
+      </mat-form-field>
+    </form>
+  </mat-card>
+
+  <mat-card class="mat-elevation-z0" *ngSwitchDefault=""
+    >Something went wrong...</mat-card
+  >
 </div>
