@@ -7,16 +7,13 @@ import {
   ofType,
   ROOT_EFFECTS_INIT,
 } from '@ngrx/effects';
-import { Message } from '@stomp/stompjs';
 import { RxStompService } from '@stomp/ng2-stompjs';
-import { EMPTY, of } from 'rxjs';
+import { of } from 'rxjs';
 import { map, catchError, exhaustMap, tap, switchMap } from 'rxjs/operators';
-import { ILogin, IUser } from 'src/app/auth/models/auth.model';
+import { ILogin } from 'src/app/auth/models/auth.model';
 import { AuthService } from 'src/app/auth/services/auth.service';
 import { SnackbarService } from 'src/app/snackbar.service';
 import * as AuthActions from '../actions/auth.actions';
-import * as WsActions from '../actions/ws.actions';
-import { IContact } from 'src/app/messages/models/messages.model';
 import { HttpErrorResponse } from '@angular/common/http';
 import { select, Store } from '@ngrx/store';
 import { AppState } from '../app.state';
@@ -60,7 +57,6 @@ export class AuthEffects {
   refreshToken$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.refreshAuth),
-      tap(() => console.log('HERE BITCH')),
       switchMap(() =>
         this.authService.refreshToken().pipe(
           map(({ jwtToken, ...user }) => {
@@ -119,6 +115,27 @@ export class AuthEffects {
           catchError((error) => {
             this.snackbarService.error(error.error);
             return of(AuthActions.newPasswordFail({ error: error.error }));
+          })
+        )
+      )
+    )
+  );
+
+  changeSelected$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.editSelectedStart),
+      concatLatestFrom((action) =>
+        this.store.pipe(select((state) => state.auth.id))
+      ),
+      exhaustMap(([action, id]) =>
+        this.authService.changeSelected(action.request, id).pipe(
+          map((request) => {
+            this.snackbarService.success('Modificare salvata cu success!');
+            return AuthActions.editSelectedSuccess({ request });
+          }),
+          catchError((error) => {
+            this.snackbarService.error(error.error);
+            return of(AuthActions.editSelectedFail({ error: error.error }));
           })
         )
       )

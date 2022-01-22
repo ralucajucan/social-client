@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-enum monthsTranslate {
+enum TranslateEnum {
   January = 'Ianuarie',
   February = 'Februarie',
   March = 'Martie',
@@ -13,17 +13,22 @@ enum monthsTranslate {
   October = 'Octombrie',
   November = 'Noiembrie',
   December = 'Decembrie',
+  firstName = 'Prenume',
+  lastName = 'Nume',
+  birthDate = 'Data nașterii',
+  email = 'Email',
+  password = 'Parolă',
+  biography = 'Biografie',
 }
 
 @Pipe({
-  name: 'dateRo',
+  name: 'translateRo',
 })
-export class DateRoPipe implements PipeTransform {
+export class TranslateRoPipe implements PipeTransform {
   transform(value: string | null): string {
     if (!value) return '';
-    const month: string = value.split(' ')[0];
-    const monthRo: string =
-      monthsTranslate[month as keyof typeof monthsTranslate];
-    return value.replace(month, monthRo);
+    const eng: string = value.split(' ')[0];
+    const ro: string = TranslateEnum[eng as keyof typeof TranslateEnum];
+    return value.replace(eng, ro);
   }
 }

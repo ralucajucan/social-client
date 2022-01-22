@@ -1,5 +1,9 @@
 import { createAction, props } from '@ngrx/store';
-import { INewPassword, IUser } from '../../auth/models/auth.model';
+import {
+  IEditSelected,
+  INewPassword,
+  IUser,
+} from '../../auth/models/auth.model';
 
 export const loginStart = createAction(
   '[Auth] Login Start',
@@ -55,6 +59,21 @@ export const newPasswordSuccess = createAction(
 
 export const newPasswordFail = createAction(
   '[Auth] Request new password fail!',
+  props<{ error: string }>()
+);
+
+export const editSelectedStart = createAction(
+  '[Auth] Edit selected start',
+  props<{ request: IEditSelected }>()
+);
+
+export const editSelectedSuccess = createAction(
+  '[Auth] Edit selected success!',
+  props<{ request: IEditSelected }>()
+);
+
+export const editSelectedFail = createAction(
+  '[Auth] Edit selected fail!',
   props<{ error: string }>()
 );
 

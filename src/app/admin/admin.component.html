@@ -1,2 +1,30 @@
 <app-toolbar></app-toolbar>
-<p>admin works!</p>
+<div class="container">
+  <mat-card>
+    <div class="page-nav">
+      <span><b>Pagina curentă:</b> {{ currentPage }}</span>
+      <button
+        mat-icon-button
+        aria-label="Pagina precedentă"
+        [disabled]="currentPage == 0"
+        (click)="decrementPage()"
+      >
+        <mat-icon>arrow_back</mat-icon></button
+      ><button
+        mat-icon-button
+        aria-label="Pagina următoare"
+        (click)="incrementPage()"
+      >
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    </div>
+    <mat-form-field appearance="outline">
+      <mat-label>Număr de utilizatori per pagină</mat-label>
+      <mat-select [(value)]="selected">
+        <mat-option *ngFor="let size of pageSizes" [value]="size">
+          {{ size }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field></mat-card
+  >
+</div>

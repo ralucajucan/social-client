@@ -16,10 +16,6 @@
         />
       </mat-form-field>
     </form>
-    <!-- {{ searchText$ | async }} -->
-    <!-- {{ users | json }}
-    {{ search | json }} -->
-
     <mat-selection-list
       *ngIf="
         (connectionStatus$ | async) === 'OPEN' && users.length;
@@ -63,12 +59,12 @@
         ></ng-container
       >
     </ng-template>
-    <ng-template #notConnected
-      ><b
-        ><mat-icon color="warn" style="padding: 0 8px">warning</mat-icon>Nu
-        sunteti conectat!</b
-      ></ng-template
-    >
+    <ng-template #notConnected>
+      <p style="padding: 0 8px">
+        <b><mat-icon color="warn">warning</mat-icon>Nu sunteti conectat!</b
+        ><br /><span class="error">{{ wsError$ | async }}</span>
+      </p>
+    </ng-template>
     <app-status [status]="connectionStatus$ | async"></app-status>
   </mat-sidenav>
 

@@ -1,49 +1,27 @@
 <app-toolbar></app-toolbar>
 
-<div class="container" [ngSwitch]="profileView">
-  <mat-card class="mat-elevation-z0" *ngSwitchCase="eView.view">
+<div class="container" [ngSwitch]="isEditMode">
+  <mat-card class="mat-elevation-z0" *ngSwitchCase="false">
     <div style="display: flex; justify-content: space-between">
       <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
       </app-avatar>
-      <button mat-stroked-button (click)="switchView(eView.password)">
-        Schimba parola
-      </button>
-      <button mat-stroked-button (click)="switchView(eView.user)">
-        Editeaza
-      </button>
+      <button mat-stroked-button (click)="switchView()">Editeaza</button>
     </div>
-    <h2>Prenume: {{ firstName$ | async }}</h2>
-    <h2>Nume: {{ lastName$ | async }}</h2>
+    <h3>
+      <b>Prenume:</b> {{ firstName$ | async }}<br /><b>Nume:</b>
+      {{ lastName$ | async }}<br /><b>Email:</b> {{ email$ | async }}
+    </h3>
     <mat-divider></mat-divider>
     <span
-      >Data nasterii: {{ birthDate$ | async | date: "longDate" | dateRo }}</span
+      ><b>Data nasterii:</b>
+      {{ birthDate$ | async | date: "longDate" | translateRo }}</span
     >
     <br />
-    <span>Biografie: {{ biography$ | async }}</span>
+    <span><b>Biografie:</b> {{ biography$ | async }}</span>
   </mat-card>
 
-  <mat-card class="mat-elevation-z0" *ngSwitchCase="eView.user">
-    <form [formGroup]="userForm" (ngSubmit)="onSubmitUser()">
-      <div style="display: flex; justify-content: space-between">
-        <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
-        </app-avatar>
-        <button type="button" (click)="switchView(eView.view)">Renunta</button>
-        <button mat-flat-button color="primary">Salveaza</button>
-      </div>
-    </form>
-
-    <h2>Prenume: {{ firstName$ | async }}</h2>
-    <h2>Nume: {{ lastName$ | async }}</h2>
-    <mat-divider></mat-divider>
-    <span
-      >Data nasterii: {{ birthDate$ | async | date: "longDate" | dateRo }}</span
-    >
-    <br />
-    <span>Biografie: {{ biography$ | async }}</span>
-  </mat-card>
-
-  <mat-card class="mat-elevation-z0" *ngSwitchCase="eView.password">
-    <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+  <mat-card class="mat-elevation-z0" *ngSwitchCase="true">
+    <form [formGroup]="editForm" (ngSubmit)="onSubmitEdit()">
       <div class="edit-header">
         <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
         </app-avatar>
@@ -52,86 +30,155 @@
             mat-button
             color="primary"
             type="button"
-            (click)="switchView(eView.view)"
+            (click)="switchView()"
           >
-            Renunta
+            Înapoi
           </button>
-          <button mat-flat-button color="primary" type="submit">
-            Salveaza
-          </button>
+          <button mat-flat-button color="primary">Salvează</button>
         </div>
       </div>
       <mat-form-field appearance="outline">
-        <mat-label for="oldPassword">Parolă</mat-label>
-        <input
-          matInput
-          maxlength="25"
-          id="oldPassword"
-          [type]="hide ? 'password' : 'text'"
-          formControlName="oldPassword"
-        />
-        <button
-          mat-icon-button
-          matSuffix
-          type="button"
-          (click)="hide = !hide"
-          [attr.aria-label]="'Hide password'"
-          [attr.aria-pressed]="hide"
-        >
-          <mat-icon>{{ hide ? "visibility_off" : "visibility" }}</mat-icon>
-        </button>
-        <mat-hint align="end"
-          >{{ oldPassword?.value?.length || 0 }} / 25</mat-hint
-        >
-        <mat-error *ngIf="oldPassword?.invalid">{{
-          getPasswordErrorMessage(oldPassword?.errors)
-        }}</mat-error>
+        <mat-label>Optiuni editare</mat-label>
+        <mat-select [(value)]="selected">
+          <mat-option *ngFor="let control of editFormKeys" [value]="control">
+            {{ control | translateRo }}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label for="password">Parolă</mat-label>
-        <input
-          matInput
-          maxlength="25"
-          id="password"
-          [type]="hide ? 'password' : 'text'"
-          formControlName="password"
-        />
-        <button
-          mat-icon-button
-          matSuffix
-          type="button"
-          (click)="hide = !hide"
-          [attr.aria-label]="'Hide password'"
-          [attr.aria-pressed]="hide"
-        >
-          <mat-icon>{{ hide ? "visibility_off" : "visibility" }}</mat-icon>
-        </button>
-        <mat-hint align="end">{{ password?.value?.length || 0 }} / 25</mat-hint>
-        <mat-error *ngIf="password?.invalid">{{
-          getPasswordErrorMessage(password?.errors)
-        }}</mat-error>
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label for="confirmPassword">Confirmă Parola</mat-label>
-        <input
-          matInput
-          maxlength="25"
-          id="confirmPassword"
-          type="password"
-          formControlName="confirmPassword"
-          [errorStateMatcher]="confirmPasswordStateMatcher"
-        />
-        <mat-hint align="end"
-          >{{ confirmPassword?.value?.length || 0 }} / 25</mat-hint
-        >
-        <mat-error *ngIf="this.passwordForm.errors?.distinctPassword">{{
-          getConfirmPasswordErrorMessage()
-        }}</mat-error>
-      </mat-form-field>
+      <ng-container [ngSwitch]="selected">
+        <mat-form-field appearance="outline" *ngSwitchCase="'firstName'">
+          <mat-label for="firstName">Prenume</mat-label>
+          <input
+            matInput
+            type="text"
+            id="firstName"
+            maxlength="45"
+            formControlName="firstName"
+          />
+          <mat-error>Obligatoriu</mat-error>
+          <mat-hint align="end"
+            >{{ firstName?.value?.length || 0 }} / 45</mat-hint
+          >
+        </mat-form-field>
+        <mat-form-field appearance="outline" *ngSwitchCase="'lastName'">
+          <mat-label for="lastName">Nume</mat-label>
+          <input
+            matInput
+            type="text"
+            maxlength="45"
+            id="lastName"
+            formControlName="lastName"
+          />
+          <mat-error>Obligatoriu</mat-error>
+          <mat-hint align="end"
+            >{{ lastName?.value?.length || 0 }} / 45</mat-hint
+          >
+        </mat-form-field>
+        <mat-form-field appearance="outline" *ngSwitchCase="'birthDate'">
+          <mat-label>Data nașterii</mat-label>
+          <input
+            matInput
+            [min]="minBirthDate"
+            [max]="maxBirthDate"
+            [matDatepicker]="datePicker"
+            formControlName="birthDate"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="datePicker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #datePicker></mat-datepicker>
+          <mat-error>Obligatoriu</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline" *ngSwitchCase="'biography'">
+          <mat-label for="biography">Biografie</mat-label>
+          <textarea
+            matInput
+            cdkTextareaAutosize
+            #autosize="cdkTextareaAutosize"
+            cdkAutosizeMinRows="1"
+            cdkAutosizeMaxRows="5"
+            id="biography"
+            type="text"
+            maxlength="255"
+            formControlName="biography"
+          ></textarea>
+          <mat-hint align="end"
+            >{{ biography?.value?.length || 0 }} / 255</mat-hint
+          >
+        </mat-form-field>
+        <ng-container *ngSwitchCase="'password'">
+          <mat-form-field appearance="outline">
+            <mat-label for="oldPassword">Parola actuală</mat-label>
+            <input
+              matInput
+              maxlength="25"
+              id="oldPassword"
+              [type]="hide ? 'password' : 'text'"
+              formControlName="oldPassword"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              (click)="hide = !hide"
+              [attr.aria-label]="'Hide password'"
+              [attr.aria-pressed]="hide"
+            >
+              <mat-icon>{{ hide ? "visibility_off" : "visibility" }}</mat-icon>
+            </button>
+            <mat-hint align="end"
+              >{{ oldPassword?.value?.length || 0 }} / 25</mat-hint
+            >
+            <mat-error *ngIf="oldPassword?.invalid">{{
+              getPasswordErrorMessage(oldPassword?.errors)
+            }}</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label for="password">Parola nouă</mat-label>
+            <input
+              matInput
+              maxlength="25"
+              id="password"
+              [type]="hide ? 'password' : 'text'"
+              formControlName="password"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              (click)="hide = !hide"
+              [attr.aria-label]="'Hide password'"
+              [attr.aria-pressed]="hide"
+            >
+              <mat-icon>{{ hide ? "visibility_off" : "visibility" }}</mat-icon>
+            </button>
+            <mat-hint align="end"
+              >{{ password?.value?.length || 0 }} / 25</mat-hint
+            >
+            <mat-error *ngIf="password?.invalid">{{
+              getPasswordErrorMessage(password?.errors)
+            }}</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label for="confirmPassword">Confirmă parola nouă</mat-label>
+            <input
+              matInput
+              maxlength="25"
+              id="confirmPassword"
+              type="password"
+              formControlName="confirmPassword"
+              [errorStateMatcher]="confirmPasswordStateMatcher"
+            />
+            <mat-hint align="end"
+              >{{ confirmPassword?.value?.length || 0 }} / 25</mat-hint
+            >
+            <mat-error *ngIf="this.editForm.errors?.distinctPassword">{{
+              getConfirmPasswordErrorMessage()
+            }}</mat-error>
+          </mat-form-field>
+        </ng-container>
+      </ng-container>
     </form>
   </mat-card>
-
-  <mat-card class="mat-elevation-z0" *ngSwitchDefault=""
-    >Something went wrong...</mat-card
-  >
 </div>

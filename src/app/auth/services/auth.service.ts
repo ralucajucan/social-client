@@ -4,6 +4,7 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import {
   IAuth,
+  IEditSelected,
   IJwt,
   ILogin,
   INewPassword,
@@ -32,8 +33,6 @@ export class AuthService {
       .post<IAuth>(`${environment.apiUrl}/auth`, loginData, httpOptions)
       .pipe(
         map(({ jwtToken, refreshToken, ...user }) => {
-          console.log(jwtToken);
-          console.log(refreshToken);
           this.saveJWT(jwtToken);
           this.saveRefresh(refreshToken);
           return user;
@@ -79,7 +78,6 @@ export class AuthService {
       refreshToken = this.getRefresh();
     }
     return this.httpClient.get<IJwt>(`${environment.apiUrl}/auth/refresh`, {
-      ...httpOptions,
       params: new HttpParams().set('token', refreshToken || ''),
     });
   }
@@ -108,5 +106,14 @@ export class AuthService {
       { ...request, id },
       httpOptions
     );
+  }
+
+  changeSelected(
+    request: IEditSelected,
+    id: number
+  ): Observable<IEditSelected> {
+    return this.httpClient
+      .post(`${environment.apiUrl}/user/edit`, { ...request, id }, httpOptions)
+      .pipe(map((value) => request));
   }
 }

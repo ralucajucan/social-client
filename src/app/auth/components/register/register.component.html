@@ -9,9 +9,13 @@
             matInput
             type="text"
             id="firstName"
+            maxlength="45"
             formControlName="firstName"
           />
           <mat-error>Obligatoriu</mat-error>
+          <mat-hint align="end"
+            >{{ firstName?.value?.length || 0 }} / 45</mat-hint
+          >
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Nume</mat-label>
@@ -19,9 +23,13 @@
             matInput
             type="text"
             id="lastName"
+            maxlength="45"
             formControlName="lastName"
           />
           <mat-error>Obligatoriu</mat-error>
+          <mat-hint align="end"
+            >{{ lastName?.value?.length || 0 }} / 45</mat-hint
+          >
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Email</mat-label>
@@ -30,8 +38,10 @@
             placeholder="email@exemplu.ro"
             id="email"
             type="text"
+            maxlength="45"
             formControlName="email"
           />
+          <mat-hint align="end">{{ email?.value?.length || 0 }} / 45</mat-hint>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label for="password">Parolă</mat-label>

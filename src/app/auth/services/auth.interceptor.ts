@@ -10,7 +10,7 @@ import {
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { environment } from 'src/environments/environment';
-import { catchError, filter, switchMap, take } from 'rxjs/operators';
+import { catchError, filter, switchMap, take, tap } from 'rxjs/operators';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -27,7 +27,10 @@ export class AuthInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     const jwt = this.authService.getJWT();
     const isApiUrl = request.url.startsWith(environment.apiUrl);
-    if (jwt && isApiUrl) {
+    const isRefreshUrl = request.url.startsWith(
+      `${environment.apiUrl}/auth/refresh`
+    );
+    if (jwt && isApiUrl && !isRefreshUrl) {
       request = request.clone({
         setHeaders: { Authorization: `Bearer ${jwt}` },
       });
@@ -35,7 +38,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (request.url.includes('/auth') && error.status === 401)
+        if (!request.url.includes('/auth') && error.status === 401)
           return this.handleError(request, next);
         return throwError(error);
       })
@@ -57,6 +60,7 @@ export class AuthInterceptor implements HttpInterceptor {
             this.isRefreshing = false;
 
             this.authService.saveJWT(response.jwtToken);
+            this.refreshTokenSubject.next(response.jwtToken);
 
             return next.handle(
               request.clone({
@@ -64,23 +68,23 @@ export class AuthInterceptor implements HttpInterceptor {
               })
             );
           }),
-          (error) => {
+          catchError((error) => {
             this.isRefreshing = false;
             this.authService.logout();
             return throwError(error);
-          }
+          })
         );
     }
     return this.refreshTokenSubject.pipe(
       filter((token) => token !== null),
       take(1),
-      switchMap((token) =>
-        next.handle(
+      switchMap((token) => {
+        return next.handle(
           request.clone({
             setHeaders: { Authorization: `Bearer ${token}` },
           })
-        )
-      )
+        );
+      })
     );
   }
 }

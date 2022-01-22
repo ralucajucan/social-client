@@ -36,3 +36,8 @@ export interface INewPassword {
   oldPassword: string;
   password: string;
 }
+
+export interface IEditSelected {
+  selected: string;
+  change: string;
+}

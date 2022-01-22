@@ -25,15 +25,14 @@ import { StoreModule } from '@ngrx/store';
 import { AppReducers } from './store/app.state';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from 'src/environments/environment';
-import { DateRoPipe } from './pipes/date-ro.pipe';
-import { SearchComponent } from './search/search.component';
+import { TranslateRoPipe } from './pipes/translate-ro.pipe';
 import { WsEffects } from './store/effects/ws.effects';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { ValidFilePipe } from './pipes/valid-file.pipe';
 import { AdminComponent } from './admin/admin.component';
 
 @NgModule({
-  declarations: [	
+  declarations: [
     AppComponent,
     LoginComponent,
     RegisterComponent,
@@ -43,13 +42,12 @@ import { AdminComponent } from './admin/admin.component';
     MessagesComponent,
     StatusComponent,
     EmailBasePipe,
-    DateRoPipe,
+    TranslateRoPipe,
     AvatarComponent,
-    SearchComponent,
     SafeHtmlPipe,
     ValidFilePipe,
-      AdminComponent
-   ],
+    AdminComponent,
+  ],
   imports: [
     MaterialModule,
     BrowserModule,

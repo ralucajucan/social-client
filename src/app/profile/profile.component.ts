@@ -1,3 +1,4 @@
+import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import {
   AbstractControlOptions,
@@ -11,15 +12,13 @@ import {
   ConfirmPasswordStateMatcher,
   distinctPasswordValidator,
 } from '../auth/components/register/validator.directive';
-import { INewPassword } from '../auth/models/auth.model';
-import { newPasswordStart } from '../store/actions/auth.actions';
+import { IEditSelected, INewPassword } from '../auth/models/auth.model';
+import {
+  editSelectedStart,
+  newPasswordStart,
+} from '../store/actions/auth.actions';
 import { AppState } from '../store/app.state';
 
-enum EView {
-  'view',
-  'user',
-  'password',
-}
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
@@ -31,19 +30,18 @@ export class ProfileComponent implements OnInit {
   lastName$: Observable<string>;
   birthDate$: Observable<string>;
   biography$: Observable<string>;
-  eView = EView;
-  profileView: EView = EView.view;
+  isEditMode: boolean = false;
   hide: boolean = true;
+  minBirthDate: Date;
+  maxBirthDate: Date;
+  selected: string = 'firstName';
 
-  userForm = this.formbuilder.group({
-    firstName: ['', [Validators.required, Validators.maxLength(50)]],
-    lastName: ['', [Validators.required, Validators.maxLength(50)]],
-    email: ['', [Validators.required, Validators.email]],
-    birthDate: ['', Validators.required],
-  });
-
-  passwordForm = this.formbuilder.group(
+  editForm = this.formbuilder.group(
     {
+      firstName: ['', [Validators.required, Validators.maxLength(50)]],
+      lastName: ['', [Validators.required, Validators.maxLength(50)]],
+      birthDate: ['', Validators.required],
+      biography: [''],
       oldPassword: ['', [Validators.required, Validators.minLength(6)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: [''],
@@ -52,18 +50,33 @@ export class ProfileComponent implements OnInit {
       validator: distinctPasswordValidator,
     } as AbstractControlOptions
   );
+
+  editFormKeys = Object.keys(this.editForm.controls).filter(
+    (control) => !['oldPassword', 'confirmPassword'].includes(control)
+  );
+
   confirmPasswordStateMatcher = new ConfirmPasswordStateMatcher();
 
+  get firstName() {
+    return this.editForm.get('firstName');
+  }
+  get lastName() {
+    return this.editForm.get('lastName');
+  }
+  get birthDate() {
+    return this.editForm.get('birthDate');
+  }
+  get biography() {
+    return this.editForm.get('biography');
+  }
   get password() {
-    return this.passwordForm.get('password');
+    return this.editForm.get('password');
   }
-
   get oldPassword() {
-    return this.passwordForm.get('oldPassword');
+    return this.editForm.get('oldPassword');
   }
-
   get confirmPassword() {
-    return this.passwordForm.get('confirmPassword');
+    return this.editForm.get('confirmPassword');
   }
 
   constructor(
@@ -79,14 +92,16 @@ export class ProfileComponent implements OnInit {
       this.store.pipe(select((state) => state.auth.birthDate)) || '';
     this.biography$ =
       this.store.pipe(select((state) => state.auth.biography)) || '';
+    const currentYear = new Date().getFullYear();
+    this.minBirthDate = new Date(currentYear - 120, 1, 1);
+    this.maxBirthDate = new Date(currentYear - 12, 12, 31);
   }
 
   ngOnInit() {}
 
-  switchView(view: EView) {
-    this.userForm.reset();
-    this.passwordForm.reset();
-    this.profileView = view;
+  switchView() {
+    this.editForm.reset();
+    this.isEditMode = !this.isEditMode;
   }
 
   getPasswordErrorMessage(errors: ValidationErrors | null | undefined) {
@@ -102,23 +117,82 @@ export class ProfileComponent implements OnInit {
   }
 
   getConfirmPasswordErrorMessage() {
-    if (this.passwordForm.errors?.distinctPassword) {
+    if (this.editForm.errors?.distinctPassword) {
       return 'Confirmarea parolei nu se potriveste.';
     }
     return '';
   }
 
-  onSubmitPassword() {
-    if (this.passwordForm.valid) {
-      this.confirmPassword?.disable();
-      const newPasswordData: INewPassword = {
-        ...this.passwordForm.value,
-      };
-      this.store.dispatch(newPasswordStart({ request: newPasswordData }));
+  getEmailErrorMessage() {
+    const email = this.editForm.get('email');
+    if (email && email?.touched) {
+      if (email.errors!['email']) {
+        return 'Email invalid';
+      }
     }
-    this.confirmPassword?.enable();
-    this.passwordForm.reset();
+    return 'Obligatoriu';
   }
 
-  onSubmitUser() {}
+  onSubmitEdit() {
+    switch (this.selected) {
+      case 'firstName': {
+        if (
+          this.firstName?.valid &&
+          this.firstName?.value &&
+          this.firstName.value.trim() !== ''
+        ) {
+          const newEditSelected: IEditSelected = {
+            selected: this.selected,
+            change: this.firstName.value,
+          };
+          this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+        }
+        break;
+      }
+      case 'lastName': {
+        if (
+          this.lastName?.valid &&
+          this.lastName?.value &&
+          this.lastName.value.trim() !== ''
+        ) {
+          const newEditSelected: IEditSelected = {
+            selected: this.selected,
+            change: this.lastName.value,
+          };
+          this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+        }
+        break;
+      }
+      case 'birthDate': {
+        if (this.birthDate?.valid && this.birthDate?.value) {
+          const newEditSelected: IEditSelected = {
+            selected: this.selected,
+            change: formatDate(this.birthDate.value, 'yyyy-MM-dd', 'en-US'),
+          };
+          this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+        }
+        break;
+      }
+      case 'biography': {
+        const newEditSelected: IEditSelected = {
+          selected: this.selected,
+          change: this.biography?.value,
+        };
+        this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+        break;
+      }
+      case 'password': {
+        if (!this.editForm.errors?.distinctPassword) {
+          this.confirmPassword?.disable();
+          const newPasswordData: INewPassword = {
+            ...this.editForm.value,
+          };
+          this.store.dispatch(newPasswordStart({ request: newPasswordData }));
+        }
+        this.confirmPassword?.enable();
+        break;
+      }
+    }
+    this.editForm.reset();
+  }
 }

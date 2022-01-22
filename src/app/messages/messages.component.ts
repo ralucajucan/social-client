@@ -9,7 +9,6 @@ import {
   distinctUntilChanged,
   map,
   startWith,
-  switchMap,
   take,
   takeWhile,
   tap,
@@ -67,6 +66,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   public received$: Observable<IMessage[]>;
   public endOfMessages$: Observable<boolean>;
   public connectionStatus$: Observable<string>;
+  public wsError$: Observable<string>;
   public upload: Upload | null = null;
   public download: Download | null = null;
   public download$: Observable<Download> | null = null;
@@ -84,6 +84,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
         return RxStompState[state];
       })
     );
+    this.wsError$ = this.store.pipe(select((state) => state.ws.error));
     this.searchTextSubscription = this.textControl.valueChanges
       .pipe(
         startWith(''),
@@ -150,8 +151,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
   remove() {}
 
   onSendMessage(event: Event) {
-    console.log(event);
-    event.stopPropagation();
     if (!this.text.length && !this.attachmentIds.length) return;
     let message: SendDTO = {
       text: this.text,

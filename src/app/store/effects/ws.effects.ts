@@ -13,7 +13,7 @@ import {
   IMessage,
   INotification,
 } from 'src/app/messages/models/messages.model';
-import { loginSuccess, logout } from '../actions/auth.actions';
+import * as AuthActions from '../actions/auth.actions';
 import { IFrame, Message } from '@stomp/stompjs';
 import * as WsActions from '../actions/ws.actions';
 import { EMPTY, of } from 'rxjs';
@@ -53,12 +53,18 @@ export class WsEffects {
 
   initErrorLoad$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(loginSuccess),
+      ofType(AuthActions.loginSuccess),
       exhaustMap(() =>
         this.rxStompService.stompErrors$.pipe(
           map((frame: IFrame) => {
-            this.snackbarService.error(frame.headers['message']);
-            return WsActions.receivedError({ text: frame.headers['message'] });
+            const errorMessage = frame.headers['message'];
+            if (errorMessage.includes('jsonwebtoken.ExpiredJwtException')) {
+              return AuthActions.refreshAuth();
+            } else {
+              return WsActions.receivedError({
+                text: frame.headers['message'],
+              });
+            }
           })
         )
       )
@@ -67,7 +73,7 @@ export class WsEffects {
 
   initStatus$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(loginSuccess),
+      ofType(AuthActions.loginSuccess),
       exhaustMap(() =>
         this.rxStompService.connected$.pipe(
           map(() => {
@@ -80,7 +86,7 @@ export class WsEffects {
 
   initUsersLoad$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(loginSuccess),
+      ofType(AuthActions.loginSuccess),
       exhaustMap(() =>
         this.rxStompService.watch('/user/queue/list').pipe(
           distinctUntilChanged(),
@@ -96,7 +102,7 @@ export class WsEffects {
 
   initMessagesLoad$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(loginSuccess),
+      ofType(AuthActions.loginSuccess),
       exhaustMap(() =>
         this.rxStompService.watch('/user/queue/conv').pipe(
           concatLatestFrom((action) =>
@@ -138,7 +144,7 @@ export class WsEffects {
 
   onLogout$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(logout),
+      ofType(AuthActions.logout),
       exhaustMap(() => of(WsActions.disconnected()))
     )
   );
@@ -152,8 +158,6 @@ export class WsEffects {
       exhaustMap(([action, page]) =>
         this.messagesService.getConversation(action.selection.email, page).pipe(
           map((msgs: IMessage[]) => {
-            console.log(msgs);
-            console.log(msgs.reverse().concat([]));
             return WsActions.loadPageSuccess({
               messages: msgs,
               page: page + 1,

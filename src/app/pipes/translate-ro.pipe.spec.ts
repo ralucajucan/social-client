@@ -1,11 +1,11 @@
 /* tslint:disable:no-unused-variable */
 
 import { TestBed, async } from '@angular/core/testing';
-import { DateRoPipe } from './date-ro.pipe';
+import { TranslateRoPipe } from './translate-ro.pipe';
 
-describe('Pipe: DateRoe', () => {
+describe('Pipe: TranslateRo', () => {
   it('create an instance', () => {
-    let pipe = new DateRoPipe();
+    let pipe = new TranslateRoPipe();
     expect(pipe).toBeTruthy();
   });
 });

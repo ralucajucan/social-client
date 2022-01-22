@@ -42,5 +42,9 @@ export const authReducer = createReducer(
   on(AuthActions.emailPasswordFail, (state, { error }) => ({
     ...state,
     error: error,
+  })),
+  on(AuthActions.editSelectedSuccess, (state, { request }) => ({
+    ...state,
+    [request.selected]: request.change,
   }))
 );
