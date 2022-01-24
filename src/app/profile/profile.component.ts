@@ -1,5 +1,5 @@
 import { formatDate } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import {
   AbstractControlOptions,
   FormBuilder,
@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { select, Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { IFullUser } from '../admin/admin.model';
 import {
   ConfirmPasswordStateMatcher,
   distinctPasswordValidator,
@@ -15,6 +16,7 @@ import {
 import { IEditSelected, INewPassword } from '../auth/models/auth.model';
 import {
   editSelectedStart,
+  editSelectedWithIdStart,
   newPasswordStart,
 } from '../store/actions/auth.actions';
 import { AppState } from '../store/app.state';
@@ -25,6 +27,8 @@ import { AppState } from '../store/app.state';
   styleUrls: ['./profile.component.scss'],
 })
 export class ProfileComponent implements OnInit {
+  @Input() inputUser: IFullUser | null = null;
+  @Input() isFromAdmin: boolean = false;
   email$: Observable<string>;
   firstName$: Observable<string>;
   lastName$: Observable<string>;
@@ -133,6 +137,21 @@ export class ProfileComponent implements OnInit {
     return 'Obligatoriu';
   }
 
+  private dispatchEdit(newEditSelected: IEditSelected) {
+    if (this.isFromAdmin) {
+      if (this.inputUser?.id) {
+        this.store.dispatch(
+          editSelectedWithIdStart({
+            request: newEditSelected,
+            id: this.inputUser.id,
+          })
+        );
+      }
+    } else {
+      this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+    }
+  }
+
   onSubmitEdit() {
     switch (this.selected) {
       case 'firstName': {
@@ -145,7 +164,7 @@ export class ProfileComponent implements OnInit {
             selected: this.selected,
             change: this.firstName.value,
           };
-          this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+          this.dispatchEdit(newEditSelected);
         }
         break;
       }
@@ -159,7 +178,7 @@ export class ProfileComponent implements OnInit {
             selected: this.selected,
             change: this.lastName.value,
           };
-          this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+          this.dispatchEdit(newEditSelected);
         }
         break;
       }
@@ -169,7 +188,7 @@ export class ProfileComponent implements OnInit {
             selected: this.selected,
             change: formatDate(this.birthDate.value, 'yyyy-MM-dd', 'en-US'),
           };
-          this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+          this.dispatchEdit(newEditSelected);
         }
         break;
       }
@@ -178,7 +197,7 @@ export class ProfileComponent implements OnInit {
           selected: this.selected,
           change: this.biography?.value,
         };
-        this.store.dispatch(editSelectedStart({ request: newEditSelected }));
+        this.dispatchEdit(newEditSelected);
         break;
       }
       case 'password': {
@@ -194,5 +213,8 @@ export class ProfileComponent implements OnInit {
       }
     }
     this.editForm.reset();
+    this.editFormKeys.forEach((key) => {
+      this.editForm.get(key)?.setErrors(null);
+    });
   }
 }

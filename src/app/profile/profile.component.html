@@ -1,7 +1,7 @@
-<app-toolbar></app-toolbar>
+<app-toolbar *ngIf="!isFromAdmin"></app-toolbar>
 
-<div class="container" [ngSwitch]="isEditMode">
-  <mat-card class="mat-elevation-z0" *ngSwitchCase="false">
+<div class="container">
+  <mat-card class="mat-elevation-z0" *ngIf="!isEditMode && !isFromAdmin">
     <div style="display: flex; justify-content: space-between">
       <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
       </app-avatar>
@@ -20,7 +20,22 @@
     <span><b>Biografie:</b> {{ biography$ | async }}</span>
   </mat-card>
 
-  <mat-card class="mat-elevation-z0" *ngSwitchCase="true">
+  <mat-card
+    class="mat-elevation-z0"
+    *ngIf="!isEditMode && isFromAdmin && inputUser"
+  >
+    <div style="display: flex; justify-content: space-between">
+      <app-avatar [name]="inputUser.firstName + ' ' + inputUser.lastName">
+      </app-avatar>
+      <button mat-stroked-button (click)="switchView()">Editeaza</button>
+    </div>
+    <h3>
+      <b>Prenume:</b> {{ inputUser.firstName }}<br /><b>Nume:</b>
+      {{ inputUser.lastName }}<br /><b>Email:</b> {{ inputUser.email }}
+    </h3>
+  </mat-card>
+
+  <mat-card class="mat-elevation-z0" *ngIf="isEditMode">
     <form [formGroup]="editForm" (ngSubmit)="onSubmitEdit()">
       <div class="edit-header">
         <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import {
   IAuth,
@@ -84,7 +84,7 @@ export class AuthService {
 
   requestEmail(email: string): Observable<any> {
     return this.httpClient
-      .get(`${environment.apiUrl}/auth/resend`, {
+      .get(`${environment.apiUrl}/auth/register/reset`, {
         ...httpOptions,
         params: new HttpParams().set('email', email || ''),
       })
@@ -93,7 +93,7 @@ export class AuthService {
 
   requestPassword(email: string): Observable<any> {
     return this.httpClient
-      .get(`${environment.apiUrl}/auth/resend-password`, {
+      .get(`${environment.apiUrl}/auth/reset-password`, {
         ...httpOptions,
         params: new HttpParams().set('email', email || ''),
       })

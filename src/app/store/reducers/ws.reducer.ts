@@ -63,7 +63,7 @@ export const wsReducer = createReducer(
   on(WsActions.loadPageSuccess, (state, { messages, page }) => ({
     ...state,
     page: page,
-    received: messages.slice().concat(state.received),
+    received: messages.slice().reverse().concat(state.received),
     endOfMessages: messages.length < 10 ? true : false,
   })),
   on(WsActions.clearNotifications, (state) => ({ ...state, notification: [] })),

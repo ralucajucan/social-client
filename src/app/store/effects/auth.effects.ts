@@ -142,6 +142,26 @@ export class AuthEffects {
     )
   );
 
+  changeSelectedWithId$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.editSelectedWithIdStart),
+      exhaustMap((action) =>
+        this.authService.changeSelected(action.request, action.id).pipe(
+          map((request) => {
+            this.snackbarService.success(`Modificat cu success utilizatorul!`);
+            return AuthActions.editSelectedWithIdSuccess({ request });
+          }),
+          catchError((error) => {
+            this.snackbarService.error(error.error);
+            return of(
+              AuthActions.editSelectedWithIdFail({ error: error.error })
+            );
+          })
+        )
+      )
+    )
+  );
+
   constructor(
     private actions$: Actions,
     private authService: AuthService,

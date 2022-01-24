@@ -77,6 +77,21 @@ export const editSelectedFail = createAction(
   props<{ error: string }>()
 );
 
+export const editSelectedWithIdStart = createAction(
+  '[Auth] Edit selected start',
+  props<{ request: IEditSelected; id: number }>()
+);
+
+export const editSelectedWithIdSuccess = createAction(
+  '[Auth] Edit selected success!',
+  props<{ request: IEditSelected }>()
+);
+
+export const editSelectedWithIdFail = createAction(
+  '[Auth] Edit selected fail!',
+  props<{ error: string }>()
+);
+
 export const refreshAuth = createAction('[Auth] Refresh Auth');
 
 export const logout = createAction('[Auth] Logout');

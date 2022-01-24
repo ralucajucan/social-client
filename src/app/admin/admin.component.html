@@ -3,28 +3,138 @@
   <mat-card>
     <div class="page-nav">
       <span><b>Pagina curentă:</b> {{ currentPage }}</span>
-      <button
-        mat-icon-button
-        aria-label="Pagina precedentă"
-        [disabled]="currentPage == 0"
-        (click)="decrementPage()"
-      >
-        <mat-icon>arrow_back</mat-icon></button
-      ><button
-        mat-icon-button
-        aria-label="Pagina următoare"
-        (click)="incrementPage()"
-      >
-        <mat-icon>arrow_forward</mat-icon>
-      </button>
+      <div class="button-container">
+        <button
+          mat-icon-button
+          aria-label="Pagina precedentă"
+          [disabled]="currentPage == 0"
+          (click)="decrementPage()"
+        >
+          <mat-icon>arrow_back</mat-icon></button
+        ><button
+          mat-icon-button
+          aria-label="Pagina următoare"
+          [disabled]="maxPage >= 0 && currentPage == maxPage"
+          (click)="incrementPage()"
+        >
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
     </div>
     <mat-form-field appearance="outline">
       <mat-label>Număr de utilizatori per pagină</mat-label>
-      <mat-select [(value)]="selected">
+      <mat-select
+        [(value)]="selectedCount"
+        (selectionChange)="changeCount($event.value)"
+      >
         <mat-option *ngFor="let size of pageSizes" [value]="size">
           {{ size }}
         </mat-option>
       </mat-select>
-    </mat-form-field></mat-card
-  >
+    </mat-form-field>
+  </mat-card>
+  <table mat-table [dataSource]="usersPage" class="mat-elevation-z8">
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef>Id.</th>
+      <td mat-cell *matCellDef="let element">{{ element.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="avatar">
+      <th mat-header-cell *matHeaderCellDef>Avatar</th>
+      <td mat-cell *matCellDef="let element">
+        <app-avatar
+          [name]="element.firstName + ' ' + element.lastName"
+          [size]="25"
+        ></app-avatar>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef>Email</th>
+      <td mat-cell *matCellDef="let element" [matTooltip]="element.email">
+        {{ element.email }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="role">
+      <th mat-header-cell *matHeaderCellDef>Rol</th>
+      <td mat-cell *matCellDef="let element" [matTooltip]="element.role">
+        {{ element.role }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="createdAt">
+      <th mat-header-cell *matHeaderCellDef>Dată creare</th>
+      <td
+        mat-cell
+        *matCellDef="let element"
+        [matTooltip]="'' + (element.createdAt | date: 'long')"
+      >
+        {{ element.createdAt | date: "longDate" | translateRo }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="updatedAt">
+      <th mat-header-cell *matHeaderCellDef>Dată modificare</th>
+      <td
+        mat-cell
+        *matCellDef="let element"
+        [matTooltip]="'' + (element.updatedAt | date: 'long')"
+      >
+        {{ element.updatedAt | date: "longDate" | translateRo }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="enabled">
+      <th mat-header-cell *matHeaderCellDef>Activat</th>
+      <td mat-cell *matCellDef="let element" [matTooltip]="element.enabled">
+        {{ element.enabled ? "A" : "F" }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="locked">
+      <th mat-header-cell *matHeaderCellDef>Blocat</th>
+      <td mat-cell *matCellDef="let element" [matTooltip]="element.locked">
+        {{ element.locked ? "A" : "F" }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="firstName">
+      <th mat-header-cell *matHeaderCellDef>Prenume</th>
+      <td mat-cell *matCellDef="let element" [matTooltip]="element.firstName">
+        {{ element.firstName }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="lastName">
+      <th mat-header-cell *matHeaderCellDef>Nume</th>
+      <td mat-cell *matCellDef="let element" [matTooltip]="element.lastName">
+        {{ element.lastName }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="birthDate">
+      <th mat-header-cell *matHeaderCellDef>Data nasterii</th>
+      <td
+        mat-cell
+        *matCellDef="let element"
+        [matTooltip]="'' + (element.birthDate | date: 'long')"
+      >
+        {{ element.birthDate | date: "longDate" | translateRo }}
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr
+      mat-row
+      (click)="selectUser(row)"
+      [class.clicked]="clickedUser?.id === row.id"
+      *matRowDef="let row; columns: displayedColumns"
+    ></tr>
+  </table>
+  <app-profile
+    *ngIf="clickedUser"
+    [isFromAdmin]="true"
+    [inputUser]="clickedUser"
+  ></app-profile>
 </div>
