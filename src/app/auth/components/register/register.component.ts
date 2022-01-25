@@ -95,6 +95,9 @@ export class RegisterComponent implements OnDestroy {
     }
     this.confirmPassword?.enable();
     this.registerForm.reset();
+    Object.keys(this.registerForm).forEach((key) => {
+      this.registerForm.get(key)?.setErrors(null);
+    });
   }
 
   getPasswordErrorMessage() {

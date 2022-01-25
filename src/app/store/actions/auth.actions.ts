@@ -78,17 +78,17 @@ export const editSelectedFail = createAction(
 );
 
 export const editSelectedWithIdStart = createAction(
-  '[Auth] Edit selected start',
+  '[Auth] Edit selected with id start',
   props<{ request: IEditSelected; id: number }>()
 );
 
 export const editSelectedWithIdSuccess = createAction(
-  '[Auth] Edit selected success!',
+  '[Auth] Edit selected with id success!',
   props<{ request: IEditSelected }>()
 );
 
 export const editSelectedWithIdFail = createAction(
-  '[Auth] Edit selected fail!',
+  '[Auth] Edit selected with id fail!',
   props<{ error: string }>()
 );
 
