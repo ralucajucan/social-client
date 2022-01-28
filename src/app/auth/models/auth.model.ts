@@ -41,3 +41,7 @@ export interface IEditSelected {
   selected: string;
   change: string;
 }
+
+export interface IEditResponse extends IEditSelected {
+  id: number;
+}

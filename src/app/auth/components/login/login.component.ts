@@ -65,7 +65,7 @@ export class LoginComponent implements OnDestroy {
     const email = this.loginForm.get('email');
     if (email && email?.touched) {
       if (email.errors!['email']) {
-        return 'Email invalid';
+        return 'Adresa de email nu este corectă!';
       }
     }
     return 'Obligatoriu';

@@ -13,6 +13,7 @@ export const initialState: AuthState = {
   biography: '',
   error: '',
   emailSent: false,
+  token: '',
 };
 
 export const authReducer = createReducer(
@@ -43,8 +44,16 @@ export const authReducer = createReducer(
     ...state,
     error: error,
   })),
-  on(AuthActions.editSelectedSuccess, (state, { request }) => ({
+  on(AuthActions.editPrincipalSuccess, (state, { request }) => ({
     ...state,
     [request.selected]: request.change,
+  })),
+  on(AuthActions.saveRegisterToken, (state, { token }) => ({
+    ...state,
+    token,
+  })),
+  on(AuthActions.saveRegisterToken, (state, initialState) => ({
+    ...state,
+    token: initialState.token,
   }))
 );

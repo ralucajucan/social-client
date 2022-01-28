@@ -2,15 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import {
-  IAuth,
-  IEditSelected,
-  IJwt,
-  ILogin,
-  INewPassword,
-  IRegister,
-  IUser,
-} from '../models/auth.model';
+import { IAuth, IJwt, ILogin, IRegister, IUser } from '../models/auth.model';
 import { environment } from 'src/environments/environment';
 import { RxStompService, StompHeaders } from '@stomp/ng2-stompjs';
 import { myRxStompConfig } from 'src/app/my-rx-stomp.config';
@@ -100,20 +92,10 @@ export class AuthService {
       .pipe(map((value) => !!value));
   }
 
-  changePassword(request: INewPassword, id: number) {
-    return this.httpClient.post(
-      `${environment.apiUrl}/user/password`,
-      { ...request, id },
-      httpOptions
-    );
-  }
-
-  changeSelected(
-    request: IEditSelected,
-    id: number
-  ): Observable<IEditSelected> {
-    return this.httpClient
-      .post(`${environment.apiUrl}/user/edit`, { ...request, id }, httpOptions)
-      .pipe(map((value) => request));
+  activateFromEmail(token: string): Observable<any> {
+    return this.httpClient.get(`${environment.apiUrl}/auth/register/confirm`, {
+      responseType: 'text',
+      params: new HttpParams().set('token', token || ''),
+    });
   }
 }

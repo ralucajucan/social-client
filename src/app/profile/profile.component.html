@@ -38,7 +38,13 @@
   <mat-card class="mat-elevation-z0" *ngIf="isEditMode">
     <form [formGroup]="editForm" (ngSubmit)="onSubmitEdit()">
       <div class="edit-header">
-        <app-avatar [name]="(firstName$ | async) + ' ' + (lastName$ | async)">
+        <app-avatar
+          [name]="
+            isFromAdmin
+              ? inputUser?.firstName + ' ' + inputUser?.lastName
+              : (firstName$ | async) + ' ' + (lastName$ | async)
+          "
+        >
         </app-avatar>
         <div class="button-container">
           <button
@@ -55,7 +61,14 @@
       <mat-form-field appearance="outline">
         <mat-label>Optiuni editare</mat-label>
         <mat-select [(value)]="selected">
-          <mat-option *ngFor="let control of editFormKeys" [value]="control">
+          <mat-option
+            *ngFor="
+              let control of isFromAdmin
+                ? editableAdminKeys
+                : editablePrincipalKeys
+            "
+            [value]="control"
+          >
             {{ control | translateRo }}
           </mat-option>
         </mat-select>
@@ -121,6 +134,14 @@
           <mat-hint align="end"
             >{{ biography?.value?.length || 0 }} / 255</mat-hint
           >
+        </mat-form-field>
+        <mat-form-field appearance="outline" *ngSwitchCase="'locked'">
+          <mat-label>Contul este blocat:</mat-label>
+          <mat-select formControlName="locked">
+            <mat-option *ngFor="let control of [true, false]" [value]="control">
+              {{ "" + control | translateRo }}
+            </mat-option>
+          </mat-select>
         </mat-form-field>
         <ng-container *ngSwitchCase="'password'">
           <mat-form-field appearance="outline">

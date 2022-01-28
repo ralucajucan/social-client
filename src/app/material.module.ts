@@ -21,6 +21,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatStepperModule } from '@angular/material/stepper';
 
 @NgModule({
   exports: [
@@ -46,6 +48,8 @@ import { MatTableModule } from '@angular/material/table';
     MatExpansionModule,
     MatSelectModule,
     MatTableModule,
+    MatPaginatorModule,
+    MatStepperModule,
   ],
 })
 export class MaterialModule {}

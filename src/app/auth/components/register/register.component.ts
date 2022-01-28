@@ -1,5 +1,11 @@
 import { formatDate } from '@angular/common';
-import { Component, OnDestroy } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import {
   AbstractControlOptions,
   FormBuilder,
@@ -12,6 +18,13 @@ import {
   distinctPasswordValidator,
 } from './validator.directive';
 import { SnackbarService } from 'src/app/snackbar.service';
+import { MatStepper } from '@angular/material/stepper';
+import { ActivatedRoute } from '@angular/router';
+import { catchError, first, take, tap } from 'rxjs/operators';
+import { select, Store } from '@ngrx/store';
+import { AppState } from 'src/app/store/app.state';
+import { EMPTY, Subscription } from 'rxjs';
+import { resetRegisterToken } from 'src/app/store/actions/auth.actions';
 
 @Component({
   selector: 'app-register',
@@ -21,6 +34,7 @@ import { SnackbarService } from 'src/app/snackbar.service';
 export class RegisterComponent implements OnDestroy {
   minBirthDate: Date;
   maxBirthDate: Date;
+  @ViewChild('stepper') private myStepper: MatStepper | undefined;
 
   registerForm = this.formBuilder.group(
     {
@@ -37,15 +51,40 @@ export class RegisterComponent implements OnDestroy {
   );
   confirmPasswordStateMatcher = new ConfirmPasswordStateMatcher();
   hide: boolean = true;
+  tokenSubscription: Subscription;
 
   constructor(
     public formBuilder: FormBuilder,
     private authService: AuthService,
-    private snackbarService: SnackbarService
+    private snackbarService: SnackbarService,
+    private store: Store<AppState>,
+    private cdr: ChangeDetectorRef
   ) {
     const currentYear = new Date().getFullYear();
     this.minBirthDate = new Date(currentYear - 120, 1, 1);
     this.maxBirthDate = new Date(currentYear - 12, 12, 31);
+    this.tokenSubscription = this.store
+      .pipe(select((state) => state.auth.token))
+      .subscribe((token) => {
+        if (token && token !== '') {
+          console.log('token', token);
+          this.authService
+            .activateFromEmail(token)
+            .pipe(tap())
+            .subscribe(
+              () => {
+                console.log('BEEN HERE');
+                this.myStepper!.next();
+                this.myStepper!.next();
+                this.store.dispatch(resetRegisterToken());
+              },
+              (error) => {
+                console.log(error);
+                this.snackbarService.error(error.error);
+              }
+            );
+        }
+      });
   }
 
   get email() {
@@ -86,6 +125,7 @@ export class RegisterComponent implements OnDestroy {
 
       this.authService.register(registerData).subscribe(
         (data) => {
+          this.myStepper?.next();
           this.snackbarService.success('Registration success!');
         },
         (error) => {
@@ -95,7 +135,7 @@ export class RegisterComponent implements OnDestroy {
     }
     this.confirmPassword?.enable();
     this.registerForm.reset();
-    Object.keys(this.registerForm).forEach((key) => {
+    Object.keys(this.registerForm.controls).forEach((key) => {
       this.registerForm.get(key)?.setErrors(null);
     });
   }
@@ -119,5 +159,13 @@ export class RegisterComponent implements OnDestroy {
       return 'Confirmarea parolei nu se potriveste.';
     }
     return '';
+  }
+
+  getEmailErrorMessage() {
+    const emailErrors = this.email?.errors;
+    if (emailErrors?.['email']) {
+      return 'Adresa de email nu este corectă!';
+    }
+    return 'Obligatoriu';
   }
 }

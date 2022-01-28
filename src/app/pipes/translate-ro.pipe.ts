@@ -19,6 +19,9 @@ enum TranslateEnum {
   email = 'Email',
   password = 'Parolă',
   biography = 'Biografie',
+  locked = 'Stare blocat',
+  true = 'Adevărat',
+  false = 'Fals',
 }
 
 @Pipe({

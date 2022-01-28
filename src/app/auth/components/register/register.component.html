@@ -2,118 +2,156 @@
   <mat-card class="mat-elevation-z0">
     <mat-card-title>Înregistrare</mat-card-title>
     <mat-card-content>
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-        <mat-form-field appearance="outline">
-          <mat-label>Prenume</mat-label>
-          <input
-            matInput
-            type="text"
-            id="firstName"
-            maxlength="45"
-            formControlName="firstName"
-          />
-          <mat-error>Obligatoriu</mat-error>
-          <mat-hint align="end"
-            >{{ firstName?.value?.length || 0 }} / 45</mat-hint
-          >
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Nume</mat-label>
-          <input
-            matInput
-            type="text"
-            id="lastName"
-            maxlength="45"
-            formControlName="lastName"
-          />
-          <mat-error>Obligatoriu</mat-error>
-          <mat-hint align="end"
-            >{{ lastName?.value?.length || 0 }} / 45</mat-hint
-          >
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Email</mat-label>
-          <input
-            matInput
-            placeholder="email@exemplu.ro"
-            id="email"
-            type="text"
-            maxlength="45"
-            formControlName="email"
-          />
-          <mat-hint align="end">{{ email?.value?.length || 0 }} / 45</mat-hint>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label for="password">Parolă</mat-label>
-          <input
-            matInput
-            maxlength="25"
-            id="password"
-            [type]="hide ? 'password' : 'text'"
-            formControlName="password"
-          />
-          <button
-            mat-icon-button
-            matSuffix
-            type="button"
-            (click)="hide = !hide"
-            [attr.aria-label]="'Hide password'"
-            [attr.aria-pressed]="hide"
-          >
-            <mat-icon>{{ hide ? "visibility_off" : "visibility" }}</mat-icon>
-          </button>
-          <mat-hint align="end"
-            >{{ password?.value?.length || 0 }} / 25</mat-hint
-          >
-          <mat-error *ngIf="password?.invalid">{{
-            getPasswordErrorMessage()
-          }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label for="confirmPassword">Confirmă Parola</mat-label>
-          <input
-            matInput
-            maxlength="25"
-            id="confirmPassword"
-            type="password"
-            formControlName="confirmPassword"
-            [errorStateMatcher]="confirmPasswordStateMatcher"
-          />
-          <mat-hint align="end"
-            >{{ confirmPassword?.value?.length || 0 }} / 25</mat-hint
-          >
-          <mat-error *ngIf="this.registerForm.errors?.distinctPassword">{{
-            getConfirmPasswordErrorMessage()
-          }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Data nașterii</mat-label>
-          <input
-            matInput
-            [min]="minBirthDate"
-            [max]="maxBirthDate"
-            [matDatepicker]="datePicker"
-            formControlName="birthDate"
-          />
-          <mat-datepicker-toggle
-            matSuffix
-            [for]="datePicker"
-          ></mat-datepicker-toggle>
-          <mat-datepicker #datePicker></mat-datepicker>
-        </mat-form-field>
-        <button
-          mat-stroked-button
-          class="back-button"
-          color="primary"
-          type="button"
-          routerLink="../login"
-        >
-          Înapoi
-        </button>
-        <button mat-flat-button color="primary" type="submit">
-          Confirmare
-        </button>
-      </form>
+      <mat-stepper linear #stepper>
+        <mat-step label="Completați datele de bază">
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Prenume</mat-label>
+              <input
+                matInput
+                type="text"
+                id="firstName"
+                maxlength="45"
+                formControlName="firstName"
+              />
+              <mat-error>Obligatoriu</mat-error>
+              <mat-hint align="end"
+                >{{ firstName?.value?.length || 0 }} / 45</mat-hint
+              >
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Nume</mat-label>
+              <input
+                matInput
+                type="text"
+                id="lastName"
+                maxlength="45"
+                formControlName="lastName"
+              />
+              <mat-error>Obligatoriu</mat-error>
+              <mat-hint align="end"
+                >{{ lastName?.value?.length || 0 }} / 45</mat-hint
+              >
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input
+                matInput
+                placeholder="email@exemplu.ro"
+                id="email"
+                type="text"
+                maxlength="45"
+                formControlName="email"
+              />
+              <mat-hint align="end"
+                >{{ email?.value?.length || 0 }} / 45</mat-hint
+              >
+              <mat-error *ngIf="email?.invalid">{{
+                getEmailErrorMessage()
+              }}</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label for="password">Parolă</mat-label>
+              <input
+                matInput
+                maxlength="25"
+                id="password"
+                [type]="hide ? 'password' : 'text'"
+                formControlName="password"
+              />
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                (click)="hide = !hide"
+                [attr.aria-label]="'Hide password'"
+                [attr.aria-pressed]="hide"
+              >
+                <mat-icon>{{
+                  hide ? "visibility_off" : "visibility"
+                }}</mat-icon>
+              </button>
+              <mat-hint align="end"
+                >{{ password?.value?.length || 0 }} / 25</mat-hint
+              >
+              <mat-error *ngIf="password?.invalid">{{
+                getPasswordErrorMessage()
+              }}</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label for="confirmPassword">Confirmă Parola</mat-label>
+              <input
+                matInput
+                maxlength="25"
+                id="confirmPassword"
+                type="password"
+                formControlName="confirmPassword"
+                [errorStateMatcher]="confirmPasswordStateMatcher"
+              />
+              <mat-hint align="end"
+                >{{ confirmPassword?.value?.length || 0 }} / 25</mat-hint
+              >
+              <mat-error *ngIf="this.registerForm.errors?.distinctPassword">{{
+                getConfirmPasswordErrorMessage()
+              }}</mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Data nașterii</mat-label>
+              <input
+                matInput
+                [min]="minBirthDate"
+                [max]="maxBirthDate"
+                [matDatepicker]="datePicker"
+                formControlName="birthDate"
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="datePicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #datePicker></mat-datepicker>
+            </mat-form-field>
+            <button
+              mat-stroked-button
+              class="back-button"
+              color="primary"
+              type="button"
+              routerLink="../login"
+            >
+              Înapoi
+            </button>
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="registerForm.invalid"
+            >
+              Confirmare
+            </button>
+          </form>
+        </mat-step>
+        <mat-step label="Verificați adresa de email">
+          <div class="info-step">
+            <h2><mat-icon inline>email</mat-icon>Ați primit un email!</h2>
+            <h4>Dați click pe link-ul primit pentru a activa contul!</h4>
+          </div>
+        </mat-step>
+        <mat-step label="Gata!">
+          <div class="info-step">
+            <h2>
+              Înregistrare cu succes! <mat-icon inline>how_to_reg</mat-icon>
+            </h2>
+            <button
+              mat-stroked-button
+              class="back-button"
+              color="primary"
+              type="button"
+              routerLink="../login"
+            >
+              Înapoi
+            </button>
+          </div>
+        </mat-step>
+      </mat-stepper>
     </mat-card-content>
   </mat-card>
 </div>

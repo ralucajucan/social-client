@@ -1,23 +1,18 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { catchError, first, take, tap } from 'rxjs/operators';
-import { SnackbarService } from '../snackbar.service';
+import { Component } from '@angular/core';
+import { PageEvent } from '@angular/material/paginator';
+import { select, Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import { userPageLoadStart } from '../store/actions/user.actions';
+import { AppState } from '../store/app.state';
 import { IFullUser } from './admin.model';
-import { AdminService } from './admin.service';
 
 @Component({
   selector: 'app-admin',
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss'],
 })
-export class AdminComponent implements OnInit, OnDestroy {
-  readonly pageSizes: number[] = [5, 10, 25, 50, 100];
-  selectedCount: number = this.pageSizes[0];
-  currentPage: number = 0;
+export class AdminComponent {
   clickedUser: IFullUser | null = null;
-  maxPage: number = -1; // unknown value at start
-  usersPageSubscription: Subscription;
-  usersPage: IFullUser[] = [];
   displayedColumns: string[] = [
     'id',
     'avatar',
@@ -30,79 +25,32 @@ export class AdminComponent implements OnInit, OnDestroy {
     'lastName',
     'birthDate',
   ];
+  users$: Observable<IFullUser[]>;
+  totalPages$: Observable<number>;
+  totalElements$: Observable<number>;
+  pageEvent: PageEvent = new PageEvent();
 
-  constructor(
-    private adminService: AdminService,
-    private snackbarService: SnackbarService
-  ) {
-    this.usersPageSubscription = this.adminService
-      .getUserPage({ page: this.currentPage, count: this.selectedCount })
-      .pipe(first())
-      .subscribe(
-        (users) => (this.usersPage = users),
-        (error) => this.snackbarService.error(error.error)
-      );
+  constructor(private store: Store<AppState>) {
+    this.store.dispatch(
+      userPageLoadStart({
+        request: { page: 0, count: 10 },
+      })
+    );
+    this.users$ = this.store.pipe(select((state) => state.userPage.users));
+    this.totalPages$ = this.store.pipe(
+      select((state) => state.userPage.totalPages)
+    );
+    this.totalElements$ = this.store.pipe(
+      select((state) => state.userPage.totalElements)
+    );
   }
 
-  ngOnInit() {}
-  ngOnDestroy(): void {
-    this.usersPageSubscription?.unsubscribe();
-  }
-
-  decrementPage() {
-    this.usersPageSubscription = this.adminService
-      .getUserPage({ page: this.currentPage - 1, count: this.selectedCount })
-      .pipe(first())
-      .subscribe(
-        (users) => {
-          this.currentPage--;
-          if (users.length <= this.selectedCount) {
-            this.maxPage = this.currentPage;
-          }
-          return (this.usersPage = users);
-        },
-        (error) => this.snackbarService.error(error.error)
-      );
-  }
-
-  incrementPage() {
-    this.usersPageSubscription = this.adminService
-      .getUserPage({ page: this.currentPage + 1, count: this.selectedCount })
-      .pipe(first())
-      .subscribe(
-        (users) => {
-          if (users.length == 0) {
-            this.maxPage = this.currentPage;
-            return;
-          }
-          this.currentPage++;
-          if (users.length <= this.selectedCount) {
-            this.maxPage = this.currentPage;
-          }
-          return (this.usersPage = users);
-        },
-        (error) => this.snackbarService.error(error.error)
-      );
-  }
-
-  changeCount(count: number) {
-    this.usersPageSubscription = this.adminService
-      .getUserPage({ page: 0, count: count })
-      .pipe(first())
-      .subscribe(
-        (users) => {
-          this.currentPage = 0;
-          if (users.length == 0) {
-            this.maxPage = this.currentPage;
-            return;
-          }
-          if (users.length <= this.selectedCount) {
-            this.maxPage = this.currentPage;
-          }
-          return (this.usersPage = users);
-        },
-        (error) => this.snackbarService.error(error.error)
-      );
+  getPage(pageEvent: PageEvent) {
+    this.store.dispatch(
+      userPageLoadStart({
+        request: { page: pageEvent.pageIndex, count: pageEvent.pageSize },
+      })
+    );
   }
 
   selectUser(row: IFullUser) {

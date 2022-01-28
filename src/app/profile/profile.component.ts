@@ -18,7 +18,7 @@ import {
   editSelectedStart,
   editSelectedWithIdStart,
   newPasswordStart,
-} from '../store/actions/auth.actions';
+} from '../store/actions/user.actions';
 import { AppState } from '../store/app.state';
 
 @Component({
@@ -49,14 +49,19 @@ export class ProfileComponent implements OnInit {
       oldPassword: ['', [Validators.required, Validators.minLength(6)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: [''],
+      locked: [this.inputUser?.locked || false, Validators.required],
     },
     {
       validator: distinctPasswordValidator,
     } as AbstractControlOptions
   );
 
-  editFormKeys = Object.keys(this.editForm.controls).filter(
-    (control) => !['oldPassword', 'confirmPassword'].includes(control)
+  editablePrincipalKeys = Object.keys(this.editForm.controls).filter(
+    (control) => !['locked', 'oldPassword', 'confirmPassword'].includes(control)
+  );
+  editableAdminKeys = Object.keys(this.editForm.controls).filter(
+    (control) =>
+      !['password', 'oldPassword', 'confirmPassword'].includes(control)
   );
 
   confirmPasswordStateMatcher = new ConfirmPasswordStateMatcher();
@@ -81,6 +86,9 @@ export class ProfileComponent implements OnInit {
   }
   get confirmPassword() {
     return this.editForm.get('confirmPassword');
+  }
+  get locked() {
+    return this.editForm.get('locked');
   }
 
   constructor(
@@ -131,7 +139,7 @@ export class ProfileComponent implements OnInit {
     const email = this.editForm.get('email');
     if (email && email?.touched) {
       if (email.errors!['email']) {
-        return 'Email invalid';
+        return 'Adresa de email nu este corectă!';
       }
     }
     return 'Obligatoriu';
@@ -200,11 +208,20 @@ export class ProfileComponent implements OnInit {
         this.dispatchEdit(newEditSelected);
         break;
       }
+      case 'locked': {
+        const newEditSelected: IEditSelected = {
+          selected: this.selected,
+          change: '' + (this.locked?.value || false),
+        };
+        this.dispatchEdit(newEditSelected);
+        break;
+      }
       case 'password': {
         if (!this.editForm.errors?.distinctPassword) {
           this.confirmPassword?.disable();
           const newPasswordData: INewPassword = {
-            ...this.editForm.value,
+            password: this.password?.value,
+            oldPassword: this.oldPassword?.value,
           };
           this.store.dispatch(newPasswordStart({ request: newPasswordData }));
         }
@@ -213,7 +230,7 @@ export class ProfileComponent implements OnInit {
       }
     }
     this.editForm.reset();
-    this.editFormKeys.forEach((key) => {
+    Object.keys(this.editForm.controls).forEach((key) => {
       this.editForm.get(key)?.setErrors(null);
     });
   }

@@ -30,6 +30,7 @@ import { WsEffects } from './store/effects/ws.effects';
 import { SafeHtmlPipe } from './pipes/safe-html.pipe';
 import { ValidFilePipe } from './pipes/valid-file.pipe';
 import { AdminComponent } from './admin/admin.component';
+import { UserEffects } from './store/effects/user.effects';
 
 @NgModule({
   declarations: [
@@ -64,7 +65,7 @@ import { AdminComponent } from './admin/admin.component';
       autoPause: true,
     }),
     EffectsModule.forRoot([AuthEffects]),
-    EffectsModule.forFeature([WsEffects]),
+    EffectsModule.forFeature([WsEffects, UserEffects]),
   ],
   providers: [authInterceptorProviders, RxStompService],
   bootstrap: [AppComponent],

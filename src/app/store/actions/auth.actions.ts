@@ -1,9 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import {
-  IEditSelected,
-  INewPassword,
-  IUser,
-} from '../../auth/models/auth.model';
+import { IEditSelected, IRegister, IUser } from '../../auth/models/auth.model';
 
 export const loginStart = createAction(
   '[Auth] Login Start',
@@ -48,49 +44,16 @@ export const emailPasswordFail = createAction(
   props<{ error: string }>()
 );
 
-export const newPasswordStart = createAction(
-  '[Auth] Request new password start',
-  props<{ request: INewPassword }>()
-);
-
-export const newPasswordSuccess = createAction(
-  '[Auth] Request new password success!'
-);
-
-export const newPasswordFail = createAction(
-  '[Auth] Request new password fail!',
-  props<{ error: string }>()
-);
-
-export const editSelectedStart = createAction(
-  '[Auth] Edit selected start',
+export const editPrincipalSuccess = createAction(
+  '[Auth] Principal data changed!',
   props<{ request: IEditSelected }>()
 );
 
-export const editSelectedSuccess = createAction(
-  '[Auth] Edit selected success!',
-  props<{ request: IEditSelected }>()
+export const saveRegisterToken = createAction(
+  '[Auth] Save register token',
+  props<{ token: string }>()
 );
-
-export const editSelectedFail = createAction(
-  '[Auth] Edit selected fail!',
-  props<{ error: string }>()
-);
-
-export const editSelectedWithIdStart = createAction(
-  '[Auth] Edit selected with id start',
-  props<{ request: IEditSelected; id: number }>()
-);
-
-export const editSelectedWithIdSuccess = createAction(
-  '[Auth] Edit selected with id success!',
-  props<{ request: IEditSelected }>()
-);
-
-export const editSelectedWithIdFail = createAction(
-  '[Auth] Edit selected with id fail!',
-  props<{ error: string }>()
-);
+export const resetRegisterToken = createAction('[Auth] Reset register token');
 
 export const refreshAuth = createAction('[Auth] Refresh Auth');
 
