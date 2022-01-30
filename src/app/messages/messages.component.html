@@ -40,7 +40,7 @@
         <span
           mat-line
           style="color: darkviolet"
-          *ngIf="user.received; else noReceived"
+          *ngIf="user.newMessages > 0; else noReceived"
           ><mat-icon inline="true">mail</mat-icon> Mesaj nou!</span
         >
         <ng-template #noReceived
@@ -76,7 +76,7 @@
         [badge]="true"
         [online]="selected?.online || false"
       ></app-avatar>
-      <h2>{{ selected?.name || "" }}</h2>
+      <h2 style="margin: 0 0 5px">{{ selected?.name || "" }}</h2>
     </div>
 
     <div class="messages-list">
@@ -92,10 +92,14 @@
           <ng-template #endConv>Sfârșitul conversației</ng-template>
         </mat-list-item>
         <mat-list-item *ngFor="let message of received$ | async; let i = index">
-          <app-avatar [name]="message.sender | emailBase: users"></app-avatar>
+          <app-avatar
+            [name]="message.sender | emailBase: users"
+            [size]="30"
+          ></app-avatar>
           <div *ngIf="editMessageIndex !== i; else editModeMessage">
             <mat-card
               class="mat-elevation-z0"
+              style="padding: 10px"
               [class.removed]="message.status == 'REMOVED'"
             >
               <div class="files from-message">
@@ -178,8 +182,11 @@
                     <mat-icon class="clear-icon big">clear</mat-icon>
                   </button>
                 </div>
-                <!-- <div class="message-options">
-                </div> -->
+                <div class="message-options">
+                  <button mat-icon-button (click)="exitEdit()">
+                    <mat-icon color="primary">edit_off</mat-icon>
+                  </button>
+                </div>
                 <form class="search-form" onSubmit="return false;">
                   <mat-form-field appearance="outline" style="width: 100%">
                     <textarea
@@ -206,6 +213,11 @@
           </ng-template>
           <h5 class="flex-between">
             <span>{{ message.createdOn | date: "medium" }}</span>
+            <span *ngIf="message.edited"
+              ><mat-icon inline>edit</mat-icon>MODIFICAT ({{
+                message.updatedOn | date: "medium"
+              }})</span
+            >
             <span
               ><span [ngSwitch]="message.status">
                 <mat-icon *ngSwitchCase="'SENT'" inline>done</mat-icon>
@@ -258,7 +270,7 @@
               mat-stroked-button
               type="button"
               (click)="fileInput.click()"
-              [class.hidden]="files.controls.length > 9"
+              [class.hidden]="files.controls.length > 8"
             >
               <mat-icon>attach_file</mat-icon>Fișier
             </button>

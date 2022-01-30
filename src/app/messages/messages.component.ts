@@ -265,6 +265,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.selectedToDownload = i;
   }
 
+  exitEdit(): void {
+    this.editMessageControl.reset();
+    this.editMessageIndex = -1;
+  }
+
   removeAttachment(file: IFile, idx: number, isEditMode = false): void {
     if (!file.id.length) {
       return;

@@ -143,7 +143,9 @@ mat-sidenav-container {
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
+  margin-bottom: -1rem;
+  padding-bottom: -0.5rem;
 }
 .flex-between {
   display: flex;

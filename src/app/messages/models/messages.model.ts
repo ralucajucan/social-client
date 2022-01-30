@@ -33,7 +33,7 @@ export interface IContact {
   email: string;
   name: string;
   online: boolean;
-  received: number;
+  newMessages: number;
 }
 
 export interface RemoveAttachment {

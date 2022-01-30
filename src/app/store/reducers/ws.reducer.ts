@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { WsState } from '../app.state';
 import * as WsActions from '../actions/ws.actions';
+import { userPageLoadFail } from '../actions/user.actions';
 
 export const initialState: WsState = {
   users: [],
@@ -9,7 +10,7 @@ export const initialState: WsState = {
     name: '',
     email: '',
     online: false,
-    received: 0,
+    newMessages: 0,
   },
   page: 0,
   received: [],
@@ -37,7 +38,15 @@ export const wsReducer = createReducer(
   })),
   on(WsActions.receivedUsers, (state, { users }) => ({
     ...state,
-    users: users,
+    users: users.map((user) =>
+      user.newMessages === -1
+        ? {
+            ...user,
+            newMessages:
+              state.users.find((u) => u.email === user.email)?.newMessages || 0,
+          }
+        : { ...user }
+    ),
     error: '',
   })),
   on(WsActions.receivedMessage, (state, { message, notification }) => ({
@@ -45,7 +54,7 @@ export const wsReducer = createReducer(
     users: state.users.map((user) => {
       if (user.email === message.sender) {
         let newUser = { ...user };
-        newUser.received += 1;
+        newUser.newMessages += 1;
         return newUser;
       }
       return user;
@@ -67,7 +76,10 @@ export const wsReducer = createReducer(
   })),
   on(WsActions.select, (state, { selection }) => ({
     ...state,
-    selected: selection,
+    users: state.users.map((user) =>
+      user.email === selection.email ? { ...user, newMessages: 0 } : { ...user }
+    ),
+    selected: { ...selection, newMessages: 0 },
     page: 0,
     received: initialState.received,
     endOfMessages: true,
