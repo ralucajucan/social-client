@@ -1,20 +1,24 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
+  FormControl,
+  Validators,
+} from '@angular/forms';
 import { select, Store } from '@ngrx/store';
 import { RxStompService } from '@stomp/ng2-stompjs';
 import { RxStompState } from '@stomp/rx-stomp';
-import { Observable, pipe, Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
   map,
   startWith,
-  take,
   takeWhile,
   tap,
 } from 'rxjs/operators';
 import { AppState } from '../store/app.state';
-import { IContact, IMessage, SendDTO } from './models/messages.model';
+import { IContact, IFile, IMessage, SendDTO } from './models/messages.model';
 import { MessagesService } from './services/messages.service';
 import { Download } from './utils/download';
 import { Upload } from './utils/upload';
@@ -33,19 +37,20 @@ export class MessagesComponent implements OnInit, OnDestroy {
     bold: false,
     italic: false,
     strikethrough: false,
-    file: null,
+    files: this.formBuilder.array([]),
     attachmentIds: '',
   });
   get text() {
     return this.messageForm.get('text')?.value;
   }
 
-  get file() {
-    return this.messageForm.get('file')?.value;
+  get files() {
+    return this.messageForm.controls['files'] as FormArray;
   }
 
-  set file(_file: File | null) {
-    this.messageForm.patchValue({ file: _file });
+  set file(_file: IFile | null) {
+    const file = this.formBuilder.control(_file);
+    this.files.push(file);
   }
 
   get attachmentIds() {
@@ -57,27 +62,31 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   public textControl = new FormControl();
+  public editMessageControl = new FormControl();
+  public editMessageIndex: number = -1;
   public search: string = '';
-  public searchTextSubscription: Subscription = new Subscription();
   public unfilteredUsers: IContact[] = [];
   public users: IContact[] = [];
-  public usersSubscription: Subscription;
-  public selected$: Observable<IContact>;
+  public selected: IContact | null = null;
+  public upload: Upload | null = null;
+  public download: Download | null = null;
+  public selectedToDownload: number = -1;
   public received$: Observable<IMessage[]>;
   public endOfMessages$: Observable<boolean>;
   public connectionStatus$: Observable<string>;
   public wsError$: Observable<string>;
-  public upload: Upload | null = null;
-  public download: Download | null = null;
-  public download$: Observable<Download> | null = null;
-  public selectedToDownload: number = -1;
+  public usersSubscription: Subscription;
+  public selectedSubscription: Subscription;
+  public searchTextSubscription: Subscription;
+  private draftSubscription: Subscription;
   private uploadSubscription: Subscription = new Subscription();
 
   constructor(
     private formBuilder: FormBuilder,
     private rxStompService: RxStompService,
     private messagesService: MessagesService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private cdRef: ChangeDetectorRef
   ) {
     this.connectionStatus$ = rxStompService.connectionState$.pipe(
       map((state) => {
@@ -111,27 +120,80 @@ export class MessagesComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    this.selected$ = this.store.pipe(select((state) => state.ws.selected));
+    this.selectedSubscription = this.store
+      .pipe(
+        select((state) => state.ws.selected),
+        tap((contact) => (this.selected = contact))
+      )
+      .subscribe();
     this.received$ = this.store.pipe(select((state) => state.ws.received));
     this.endOfMessages$ = this.store.pipe(
       select((state) => state.ws.endOfMessages)
     );
+    this.draftSubscription = this.store
+      .pipe(
+        select((state) => state.ws.draft),
+        tap((draft) => {
+          this.messageForm.patchValue({
+            text: draft.text,
+            bold: false,
+            italic: false,
+            strikethrough: false,
+            attachmentIds: draft.attachmentIds,
+          });
+          this.files.clear();
+          draft.attachments?.forEach((file) => (this.file = file));
+        })
+      )
+      .subscribe();
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    if (this.selected?.email.length) {
+      this.store.dispatch(WsActions.select({ selection: this.selected }));
+      this.cdRef.detectChanges();
+    }
+  }
 
   ngOnDestroy() {
     this.uploadSubscription?.unsubscribe();
     this.searchTextSubscription?.unsubscribe();
-    //TODO: make call to service to delete file if not sent
+    this.selectedSubscription?.unsubscribe();
+    this.draftSubscription?.unsubscribe();
+    if (this.selected) {
+      const message: SendDTO = {
+        text: this.text,
+        user: this.selected?.email || '',
+      };
+      this.upload = null;
+      this.messageForm.reset({
+        text: '',
+        bold: false,
+        italic: false,
+        strikethrough: false,
+        attachmentIds: '',
+      });
+      this.store.dispatch(WsActions.saveDraft({ message }));
+    }
   }
 
   onFileInput(files: FileList | null): void {
     if (files) {
-      this.file = files.item(0);
-      if (this.file) {
+      const cFile = files.item(0);
+      const idxFile = this.files.length;
+      if (cFile) {
+        this.file = {
+          id: '',
+          name: cFile?.name || '',
+          type: cFile?.type || '',
+          size: cFile?.size || 0,
+          file: cFile,
+        };
         this.uploadSubscription = this.messagesService
-          .upload(this.file)
+          .upload(
+            this.files.controls[idxFile].value.file,
+            this.selected?.email || ''
+          )
           .subscribe(
             (data: Upload) => {
               this.upload = data;
@@ -139,6 +201,10 @@ export class MessagesComponent implements OnInit, OnDestroy {
                 this.attachmentIds += this.attachmentIds.length
                   ? ','.concat(data.id)
                   : data.id;
+                this.files.controls[idxFile].patchValue({
+                  ...this.files.controls[idxFile].value,
+                  id: data.id,
+                });
               }
             },
             (error) => {
@@ -152,30 +218,38 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   onSendMessage(event: Event) {
     if (!this.text.length && !this.attachmentIds.length) return;
-    let message: SendDTO = {
+    const message: SendDTO = {
       text: this.text,
-      user: '',
-      attachmentIds: this.attachmentIds,
+      user: this.selected?.email || '',
     };
-    const sub = this.selected$
-      .pipe(take(1))
-      .subscribe((selected) => (message.user = selected.email));
-    sub.unsubscribe();
     this.store.dispatch(WsActions.sendMessage({ message }));
-
     this.messageForm.reset({
       text: '',
       bold: false,
       italic: false,
       strikethrough: false,
-      file: null,
       attachmentIds: '',
     });
+    this.files.clear();
     this.upload = null;
   }
 
   selectUser(user: IContact) {
+    const message: SendDTO = {
+      text: this.text,
+      user: this.selected?.email || '',
+    };
+    this.upload = null;
+    this.messageForm.reset({
+      text: '',
+      bold: false,
+      italic: false,
+      strikethrough: false,
+      attachmentIds: '',
+    });
+    this.files.clear();
     this.store.dispatch(WsActions.select({ selection: user }));
+    this.store.dispatch(WsActions.saveDraft({ message }));
   }
 
   loadMore() {
@@ -191,7 +265,47 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.selectedToDownload = i;
   }
 
-  removeMessage(message: IMessage) {}
+  removeAttachment(file: IFile, idx: number, isEditMode = false): void {
+    if (!file.id.length) {
+      return;
+    }
+    if (isEditMode) {
+      this.store.dispatch(
+        WsActions.removeAttachmentStart({
+          attachmentId: file.id,
+          messageId: idx,
+        })
+      );
+      this.editMessageControl.reset();
+      this.editMessageIndex = -1;
+    } else {
+      this.messagesService.removeAttachment(file.id).subscribe(
+        (value) => this.files.removeAt(idx),
+        (error) => console.log(error)
+      );
+    }
+  }
 
-  editMessage(message: IMessage) {}
+  removeMessage(id: number) {
+    if (!this.selected?.email) return;
+    this.store.dispatch(
+      WsActions.removeMessageStart({ email: this.selected.email, id: id })
+    );
+  }
+
+  editMessage(message: IMessage, index: number) {
+    this.editMessageIndex = index;
+    this.editMessageControl.patchValue(message.text);
+  }
+
+  onSendEditMessage(id: number) {
+    console.log('BEEN HERE!!!');
+    const message: SendDTO = {
+      text: this.editMessageControl.value,
+      user: this.selected?.email || '',
+    };
+    this.store.dispatch(WsActions.editMessageStart({ message, id: id }));
+    this.editMessageControl.reset();
+    this.editMessageIndex = -1;
+  }
 }

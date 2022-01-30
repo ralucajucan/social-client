@@ -30,7 +30,7 @@ export const select = createAction(
 
 export const loadPageSuccess = createAction(
   '[HTTP] Load messages page success',
-  props<{ messages: IMessage[]; page: number }>()
+  props<{ messages: IMessage[]; page: number; draft: IMessage | undefined }>()
 );
 
 export const loadNextPageStart = createAction(
@@ -39,6 +39,53 @@ export const loadNextPageStart = createAction(
 
 export const sendMessage = createAction(
   '[Ws] Send message',
+  props<{ message: SendDTO }>()
+);
+
+export const editMessageStart = createAction(
+  '[Message] Edit message start',
+  props<{ message: SendDTO; id: number }>()
+);
+
+export const editMessageSuccess = createAction(
+  '[Message] Edit message success',
+  props<{ message: IMessage }>()
+);
+export const editMessageFail = createAction(
+  '[Message] Edit message fail',
+  props<{ error: String }>()
+);
+
+export const removeAttachmentStart = createAction(
+  '[Message] Remove attachment message start',
+  props<{ attachmentId: string; messageId: number }>()
+);
+
+export const removeAttachmentSuccess = createAction(
+  '[Message] Remove attachment message success',
+  props<{ attachmentId: string; messageId: number }>()
+);
+export const removeAttachmentFail = createAction(
+  '[Message] Remove attachment message fail',
+  props<{ error: String }>()
+);
+
+export const removeMessageStart = createAction(
+  '[Message] Remove message start',
+  props<{ email: string; id: number }>()
+);
+
+export const removeMessageSuccess = createAction(
+  '[Message] Remove message success',
+  props<{ message: IMessage }>()
+);
+export const removeMessageFail = createAction(
+  '[Message] Remove message fail',
+  props<{ error: String }>()
+);
+
+export const saveDraft = createAction(
+  '[Ws] Save draft',
   props<{ message: SendDTO }>()
 );
 

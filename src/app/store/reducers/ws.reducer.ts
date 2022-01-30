@@ -15,6 +15,18 @@ export const initialState: WsState = {
   received: [],
   endOfMessages: true,
   error: '',
+  draft: {
+    id: 0,
+    sender: '',
+    receiver: '',
+    text: '',
+    attachmentIds: '',
+    attachments: [],
+    status: 'DRAFT',
+    edited: false,
+    createdOn: '',
+    updatedOn: '',
+  },
 };
 
 export const wsReducer = createReducer(
@@ -60,12 +72,35 @@ export const wsReducer = createReducer(
     received: initialState.received,
     endOfMessages: true,
   })),
-  on(WsActions.loadPageSuccess, (state, { messages, page }) => ({
+  on(WsActions.loadPageSuccess, (state, { messages, page, draft }) => ({
     ...state,
     page: page,
     received: messages.slice().reverse().concat(state.received),
     endOfMessages: messages.length < 10 ? true : false,
+    draft: draft || state.draft,
   })),
+  on(WsActions.editMessageSuccess, (state, { message }) => ({
+    ...state,
+    received: state.received.map((current) =>
+      current.id === message.id ? { ...message } : { ...current }
+    ),
+  })),
+  on(
+    WsActions.removeAttachmentSuccess,
+    (state, { attachmentId, messageId }) => ({
+      ...state,
+      received: state.received.map((current) =>
+        current.id === messageId
+          ? {
+              ...current,
+              attachments: current.attachments.filter(
+                (a) => a.id !== attachmentId
+              ),
+            }
+          : { ...current }
+      ),
+    })
+  ),
   on(WsActions.clearNotifications, (state) => ({ ...state, notification: [] })),
   on(WsActions.disconnected, () => ({ ...initialState }))
 );

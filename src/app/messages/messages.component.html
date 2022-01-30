@@ -68,15 +68,15 @@
     <app-status [status]="connectionStatus$ | async"></app-status>
   </mat-sidenav>
 
-  <mat-sidenav-content *ngIf="(selected$ | async)?.email !== ''">
+  <mat-sidenav-content *ngIf="selected?.email !== ''">
     <div class="messages-contact">
       <app-avatar
         mat-list-avatar
-        [name]="(selected$ | async)?.name || ''"
+        [name]="selected?.name || ''"
         [badge]="true"
-        [online]="(selected$ | async)?.online || false"
+        [online]="selected?.online || false"
       ></app-avatar>
-      <h2>{{ (selected$ | async)?.name || "" }}</h2>
+      <h2>{{ selected?.name || "" }}</h2>
     </div>
 
     <div class="messages-list">
@@ -93,48 +93,52 @@
         </mat-list-item>
         <mat-list-item *ngFor="let message of received$ | async; let i = index">
           <app-avatar [name]="message.sender | emailBase: users"></app-avatar>
-          <div>
-            <mat-card class="mat-elevation-z0">
-              <button
-                class="file-button caption"
-                mat-stroked-button
-                type="button"
-                *ngIf="message.attachments"
-                (click)="
-                  downloadStart(
-                    message.attachmentIds,
-                    message.attachments[0].name,
-                    i
-                  )
+          <div *ngIf="editMessageIndex !== i; else editModeMessage">
+            <mat-card
+              class="mat-elevation-z0"
+              [class.removed]="message.status == 'REMOVED'"
+            >
+              <div class="files from-message">
+                <button
+                  class="file-button caption"
+                  mat-stroked-button
+                  type="button"
+                  *ngFor="let attachment of message.attachments"
+                  (click)="downloadStart(attachment.id, attachment.name, i)"
+                  [matTooltip]="attachment.name"
+                >
+                  <img
+                    *ngIf="attachment | validFile: 'image'"
+                    [src]="attachment.file | safeHtml: attachment.name"
+                    alt="Supposed image"
+                    width="155"
+                    style="max-height: 100px; object-fit: cover"
+                  />
+                  <div>
+                    <span class="restricted">{{
+                      attachment.name.split(".")[0]
+                    }}</span
+                    ><span> .{{ attachment.name.split(".")[1] }}</span>
+                  </div>
+                </button>
+              </div>
+              <div
+                class="message-options"
+                [class.blocked]="
+                  message.status === 'REMOVED' ||
+                  message.receiver !== selected?.email
                 "
               >
-                <img
-                  *ngIf="message.attachments[0] | validFile: 'image'"
-                  [src]="
-                    message.attachments[0].file
-                      | safeHtml: message.attachments[0].name
-                  "
-                  alt="Supposed image"
-                  width="155"
-                />
-                <div>
-                  <span class="restricted">{{
-                    message.attachments[0].name.split(".")[0]
-                  }}</span
-                  ><span>
-                    .{{ message.attachments[0].name.split(".")[1] }}</span
-                  >
-                </div>
-              </button>
-              <div class="message-options">
-                <button mat-icon-button (click)="removeMessage(message)">
+                <button mat-icon-button (click)="removeMessage(message.id)">
                   <mat-icon color="primary">delete</mat-icon>
                 </button>
-                <button mat-icon-button (click)="editMessage(message)">
+                <button mat-icon-button (click)="editMessage(message, i)">
                   <mat-icon color="primary">edit</mat-icon>
                 </button>
               </div>
-              {{ message.text }}
+              <span [class.removed-text]="message.status == 'REMOVED'">{{
+                message.text
+              }}</span>
             </mat-card>
             <mat-progress-bar
               *ngIf="i === selectedToDownload && download"
@@ -143,10 +147,76 @@
             >
             </mat-progress-bar>
           </div>
-          <h6 class="flex-between">
+          <ng-template #editModeMessage>
+            <div>
+              <mat-card class="mat-elevation-z0">
+                <div class="files from-message">
+                  <button
+                    class="file-button caption"
+                    mat-stroked-button
+                    type="button"
+                    *ngFor="
+                      let attachment of message.attachments;
+                      let idx = index
+                    "
+                    (click)="removeAttachment(attachment, message.id, true)"
+                    [matTooltip]="attachment.name"
+                  >
+                    <img
+                      *ngIf="attachment | validFile: 'image'"
+                      [src]="attachment.file | safeHtml: attachment.name"
+                      alt="Supposed image"
+                      width="155"
+                      style="max-height: 100px; object-fit: cover"
+                    />
+                    <div>
+                      <span class="restricted">{{
+                        attachment.name.split(".")[0]
+                      }}</span
+                      ><span> .{{ attachment.name.split(".")[1] }}</span>
+                    </div>
+                    <mat-icon class="clear-icon big">clear</mat-icon>
+                  </button>
+                </div>
+                <!-- <div class="message-options">
+                </div> -->
+                <form class="search-form" onSubmit="return false;">
+                  <mat-form-field appearance="outline" style="width: 100%">
+                    <textarea
+                      matInput
+                      cdkTextareaAutosize
+                      #autosize="cdkTextareaAutosize"
+                      cdkAutosizeMinRows="1"
+                      cdkAutosizeMaxRows="5"
+                      id="text"
+                      type="text"
+                      [formControl]="editMessageControl"
+                    ></textarea>
+                    <button
+                      matSuffix
+                      mat-icon-button
+                      (click)="onSendEditMessage(message.id)"
+                    >
+                      <mat-icon>save</mat-icon>
+                    </button>
+                  </mat-form-field>
+                </form>
+              </mat-card>
+            </div>
+          </ng-template>
+          <h5 class="flex-between">
             <span>{{ message.createdOn | date: "medium" }}</span>
-            <span>{{ message.status }}</span>
-          </h6>
+            <span
+              ><span [ngSwitch]="message.status">
+                <mat-icon *ngSwitchCase="'SENT'" inline>done</mat-icon>
+                <mat-icon *ngSwitchCase="'RECEIVED'" inline>done_all</mat-icon>
+                <mat-icon *ngSwitchCase="'READ'" inline>visibility</mat-icon>
+                <mat-icon *ngSwitchCase="'REMOVED'" inline
+                  >remove_done</mat-icon
+                > </span
+              >{{ message.status }}</span
+            >
+          </h5>
         </mat-list-item>
       </mat-list>
     </div>
@@ -155,41 +225,63 @@
       <mat-divider></mat-divider>
       <form [formGroup]="messageForm" (ngSubmit)="onSendMessage($event)">
         <div class="messages-input-top">
-          <button
-            class="file-button caption"
-            mat-stroked-button
-            type="button"
-            (click)="fileInput.click()"
-          >
-            <div *ngIf="file; else noFile">
-              <span class="restricted">{{ file.name.split(".")[0] }}</span
-              ><span> .{{ file.name.split(".")[1] }}</span>
-            </div>
-            <ng-template #noFile>
-              <mat-icon>attach_file</mat-icon>Fișier
-            </ng-template>
-            <mat-progress-bar
-              *ngIf="upload"
-              [mode]="upload.state == 'PENDING' ? 'buffer' : 'determinate'"
-              [value]="upload.progress"
+          <div class="files">
+            <button
+              *ngFor="
+                let file of files.controls;
+                let idx = index;
+                let last = last
+              "
+              class="file-button smaller caption"
+              mat-stroked-button
+              type="button"
+              [matTooltip]="file.value.name"
+              (click)="removeAttachment(file.value, idx)"
             >
-            </mat-progress-bar>
-          </button>
-          <input
-            hidden
-            id="file"
-            type="file"
-            #fileInput
-            (change)="onFileInput(fileInput.files)"
-          />
-          <button mat-icon-button color="primary">
+              <div>
+                <span class="restricted">{{
+                  file.value.name.split(".")[0]
+                }}</span
+                ><span> .{{ file.value.name.split(".")[1] }}</span>
+              </div>
+              <mat-progress-bar
+                class="app-progress-bar"
+                *ngIf="upload && last"
+                [mode]="upload.state == 'PENDING' ? 'buffer' : 'determinate'"
+                [value]="upload.progress"
+              >
+              </mat-progress-bar>
+              <mat-icon class="clear-icon">clear</mat-icon>
+            </button>
+            <button
+              class="file-button smaller caption"
+              mat-stroked-button
+              type="button"
+              (click)="fileInput.click()"
+              [class.hidden]="files.controls.length > 9"
+            >
+              <mat-icon>attach_file</mat-icon>Fișier
+            </button>
+            <input
+              hidden
+              id="file"
+              type="file"
+              #fileInput
+              (change)="onFileInput(fileInput.files)"
+            />
+          </div>
+
+          <button
+            mat-icon-button
+            color="primary"
+            style="position: absolute; right: 8px"
+          >
             <mat-icon>send</mat-icon>
           </button>
         </div>
         <mat-form-field appearance="outline" class="messages-input-textarea">
           <mat-label
-            >Trimiteti mesaj catre
-            {{ (selected$ | async)?.name || "" }}</mat-label
+            >Trimiteti mesaj catre {{ selected?.name || "" }}</mat-label
           >
           <textarea
             matInput

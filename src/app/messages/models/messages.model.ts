@@ -21,13 +21,12 @@ export interface IFile {
   name: string;
   type: string;
   size: number;
-  file: Blob;
+  file: Blob | File;
 }
 
 export interface SendDTO {
   text: string;
   user: string;
-  attachmentIds: string;
 }
 
 export interface IContact {
@@ -35,4 +34,9 @@ export interface IContact {
   name: string;
   online: boolean;
   received: number;
+}
+
+export interface RemoveAttachment {
+  attachmentId: string;
+  messageId: number | undefined;
 }

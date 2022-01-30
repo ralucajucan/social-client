@@ -1,5 +1,11 @@
 import { Injectable } from '@angular/core';
-import { Actions, concatLatestFrom, createEffect, ofType } from '@ngrx/effects';
+import {
+  act,
+  Actions,
+  concatLatestFrom,
+  createEffect,
+  ofType,
+} from '@ngrx/effects';
 import { RxStompService } from '@stomp/ng2-stompjs';
 import {
   catchError,
@@ -12,6 +18,7 @@ import {
   IContact,
   IMessage,
   INotification,
+  RemoveAttachment,
 } from 'src/app/messages/models/messages.model';
 import * as AuthActions from '../actions/auth.actions';
 import { IFrame, Message } from '@stomp/stompjs';
@@ -128,20 +135,6 @@ export class WsEffects {
     )
   );
 
-  updateAsReceived$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(WsActions.receivedMessage),
-        tap((message) =>
-          this.rxStompService.publish({
-            destination: '/api/update-message',
-            body: JSON.stringify(message),
-          })
-        )
-      ),
-    { dispatch: false }
-  );
-
   onLogout$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.logout),
@@ -149,7 +142,23 @@ export class WsEffects {
     )
   );
 
-  onChangeSelect$ = createEffect(() =>
+  saveDraft$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(WsActions.saveDraft),
+        tap((action) => {
+          if (action.message.user.length && action.message.text.length) {
+            this.rxStompService.publish({
+              destination: '/api/draft',
+              body: JSON.stringify(action.message),
+            });
+          }
+        })
+      ),
+    { dispatch: false }
+  );
+
+  getMessagesOnSelect$ = createEffect(() =>
     this.actions$.pipe(
       ofType(WsActions.select),
       concatLatestFrom((action) =>
@@ -159,8 +168,9 @@ export class WsEffects {
         this.messagesService.getConversation(action.selection.email, page).pipe(
           map((msgs: IMessage[]) => {
             return WsActions.loadPageSuccess({
-              messages: msgs,
+              messages: msgs.filter((message) => message.status !== 'DRAFT'),
               page: page + 1,
+              draft: msgs.find((message) => message.status === 'DRAFT'),
             });
           }),
           catchError((error) => {
@@ -182,11 +192,74 @@ export class WsEffects {
       exhaustMap(([action, email, page]) =>
         this.messagesService.getConversation(email, page).pipe(
           map((msgs: IMessage[]) =>
-            WsActions.loadPageSuccess({ messages: msgs, page: page + 1 })
+            WsActions.loadPageSuccess({
+              messages: msgs,
+              page: page + 1,
+              draft: undefined,
+            })
           ),
           catchError((error) => {
             this.snackbarService.error(error.error);
             return EMPTY;
+          })
+        )
+      )
+    )
+  );
+
+  editMessage$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WsActions.editMessageStart),
+      exhaustMap((action) =>
+        this.messagesService.editMessage(action.message, action.id).pipe(
+          map((message: IMessage) => {
+            this.snackbarService.success('Modificarea mesajului cu succes!');
+            return WsActions.editMessageSuccess({ message });
+          }),
+          catchError((error) => {
+            this.snackbarService.error(error.error);
+            return of(WsActions.editMessageFail({ error: error.error }));
+          })
+        )
+      )
+    )
+  );
+
+  removeAttachmentMessage$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WsActions.removeAttachmentStart),
+      exhaustMap((action) =>
+        this.messagesService
+          .removeAttachment(action.attachmentId, action.messageId)
+          .pipe(
+            map((value: RemoveAttachment) => {
+              this.snackbarService.success('Atașament șters!');
+              return WsActions.removeAttachmentSuccess({
+                attachmentId: value.attachmentId,
+                messageId: value.messageId || 0,
+              });
+            }),
+            catchError((error) => {
+              this.snackbarService.error(error.error);
+              return of(WsActions.removeAttachmentFail({ error: error.error }));
+            })
+          )
+      )
+    )
+  );
+
+  removeMessage$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(WsActions.removeMessageStart),
+      exhaustMap((action) =>
+        this.messagesService.removeMessage(action.email, action.id).pipe(
+          map((message: IMessage) => {
+            this.snackbarService.success('Mesaj șters!');
+            return WsActions.removeMessageSuccess({ message });
+          }),
+          catchError((error) => {
+            this.snackbarService.error(error.error);
+            return of(WsActions.removeAttachmentFail({ error: error.error }));
           })
         )
       )

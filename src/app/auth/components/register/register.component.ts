@@ -67,19 +67,16 @@ export class RegisterComponent implements OnDestroy {
       .pipe(select((state) => state.auth.token))
       .subscribe((token) => {
         if (token && token !== '') {
-          console.log('token', token);
           this.authService
             .activateFromEmail(token)
             .pipe(tap())
             .subscribe(
               () => {
-                console.log('BEEN HERE');
                 this.myStepper!.next();
                 this.myStepper!.next();
                 this.store.dispatch(resetRegisterToken());
               },
               (error) => {
-                console.log(error);
                 this.snackbarService.error(error.error);
               }
             );

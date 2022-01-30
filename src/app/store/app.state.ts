@@ -24,6 +24,7 @@ export interface WsState {
   received: IMessage[];
   endOfMessages: boolean;
   error: string;
+  draft: IMessage;
 }
 
 export interface UserPageState {

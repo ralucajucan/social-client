@@ -57,15 +57,52 @@ mat-sidenav-container {
     }
   }
 }
+
 .header {
   display: flex;
   justify-content: space-between;
 }
+.files {
+  display: flex;
+  gap: 1rem;
+  overflow-y: hidden;
+  overflow-x: auto;
+  max-width: calc(100vw - 280px);
+  &.from-message {
+    max-width: calc(100vw - 400px);
+  }
+}
+
+.file-button:hover .clear-icon {
+  display: inline-block;
+}
+
 .file-button {
   display: flex;
   padding: 0 5px;
   flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
   width: 170px;
+  &.hidden {
+    display: none;
+  }
+
+  .clear-icon {
+    position: absolute;
+    top: 5px;
+    left: 40px;
+    transform: scale(2);
+    color: $warn-default;
+    display: none;
+    &.big {
+      top: 50px;
+      left: 70px;
+      transform: scale(6);
+    }
+  }
+
   div {
     display: flex;
     justify-content: center;
@@ -83,6 +120,20 @@ mat-sidenav-container {
     margin-top: 4px;
     border: 1px solid darkviolet;
     border-radius: 5px;
+  }
+
+  .app-progress-bar {
+    width: 170px;
+  }
+
+  &.smaller {
+    width: 100px;
+    div > span.restricted {
+      max-width: 55px;
+    }
+    .app-progress-bar {
+      width: 100px;
+    }
   }
 }
 
@@ -114,15 +165,10 @@ mat-card {
     justify-content: right;
     border-radius: 10px;
     .mat-icon-button {
-      height: 25px !important;
-      width: 30px !important;
-      .mat-icon {
-        font-size: 20px !important;
-        vertical-align: top !important;
-      }
+      transform: scale(1);
     }
   }
-  &:hover .message-options {
+  &:hover .message-options:not(.blocked) {
     display: flex;
   }
 }
@@ -151,4 +197,13 @@ ng-template {
 
 .error {
   color: $warn-default;
+}
+
+.removed-text {
+  color: rgb(75, 75, 75);
+  font-style: italic;
+}
+
+mat-card.removed {
+  background-color: rgba($color: white, $alpha: 0.5);
 }

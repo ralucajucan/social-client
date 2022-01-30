@@ -30,7 +30,10 @@ export class AuthInterceptor implements HttpInterceptor {
     const isRefreshUrl = request.url.startsWith(
       `${environment.apiUrl}/auth/refresh`
     );
-    if (jwt && isApiUrl && !isRefreshUrl) {
+    const isRegisterUrl = request.url.startsWith(
+      `${environment.apiUrl}/auth/register`
+    );
+    if (jwt && isApiUrl && !isRefreshUrl && !isRegisterUrl) {
       request = request.clone({
         setHeaders: { Authorization: `Bearer ${jwt}` },
       });

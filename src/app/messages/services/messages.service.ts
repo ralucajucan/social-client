@@ -1,9 +1,10 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { EMPTY, Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { IMessage, RemoveAttachment, SendDTO } from '../models/messages.model';
 import { download } from '../utils/download';
 import { upload, Upload } from '../utils/upload';
 
@@ -26,9 +27,10 @@ export class MessagesService {
     );
   }
 
-  upload(file: File): Observable<Upload> {
+  upload(file: File, toEmail: string): Observable<Upload> {
     const data = new FormData();
     data.append('file', file);
+    data.append('toEmail', toEmail);
     return this.httpClient
       .post(`${environment.apiUrl}/message/upload`, data, {
         reportProgress: true,
@@ -54,5 +56,35 @@ export class MessagesService {
           URL.revokeObjectURL(objectUrl);
         })
       );
+  }
+
+  removeAttachment(
+    id: string,
+    messageId?: number
+  ): Observable<RemoveAttachment> {
+    return this.httpClient
+      .delete(`${environment.apiUrl}/message/attachment`, {
+        params: new HttpParams().set('id', id),
+      })
+      .pipe(
+        map(() => ({
+          attachmentId: id,
+          messageId: messageId,
+        }))
+      );
+  }
+
+  editMessage(message: SendDTO, id: number): Observable<IMessage> {
+    return this.httpClient.post<IMessage>(
+      `${environment.apiUrl}/message/edit`,
+      message,
+      { params: new HttpParams().set('id', id) }
+    );
+  }
+
+  removeMessage(email: string, id: number): Observable<IMessage> {
+    return this.httpClient.delete<IMessage>(`${environment.apiUrl}/message`, {
+      params: new HttpParams().set('id', id).append('contactEmail', email),
+    });
   }
 }
