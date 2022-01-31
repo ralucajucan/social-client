@@ -22,7 +22,11 @@ import { AvatarComponent } from './avatar/avatar.component';
 import { EffectsModule } from '@ngrx/effects';
 import { AuthEffects } from './store/effects/auth.effects';
 import { StoreModule } from '@ngrx/store';
-import { AppReducers } from './store/app.state';
+import {
+  actionSanitizer,
+  AppReducers,
+  stateSanitizer,
+} from './store/app.state';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from 'src/environments/environment';
 import { TranslateRoPipe } from './pipes/translate-ro.pipe';
@@ -63,6 +67,8 @@ import { UserEffects } from './store/effects/user.effects';
       maxAge: 25,
       logOnly: environment.production,
       autoPause: true,
+      actionSanitizer: actionSanitizer,
+      stateSanitizer: stateSanitizer,
     }),
     EffectsModule.forRoot([AuthEffects]),
     EffectsModule.forFeature([WsEffects, UserEffects]),

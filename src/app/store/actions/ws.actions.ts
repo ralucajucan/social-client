@@ -38,7 +38,7 @@ export const loadNextPageStart = createAction(
 );
 
 export const sendMessage = createAction(
-  '[Ws] Send message',
+  '[WS] Send message',
   props<{ message: SendDTO }>()
 );
 
@@ -85,10 +85,10 @@ export const removeMessageFail = createAction(
 );
 
 export const saveDraft = createAction(
-  '[Ws] Save draft',
+  '[WS] Save draft',
   props<{ message: SendDTO }>()
 );
 
 export const clearNotifications = createAction('[WS] Clear notifications');
 
-export const disconnected = createAction('[Ws] Disconnected');
+export const disconnected = createAction('[WS] Disconnected');
