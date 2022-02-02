@@ -49,31 +49,34 @@ export const wsReducer = createReducer(
     ),
     error: '',
   })),
-  on(WsActions.receivedMessage, (state, { message, notification }) => ({
-    ...state,
-    users: state.users.map((user) => {
-      if (user.email === message.sender) {
-        let newUser = { ...user };
-        newUser.newMessages += 1;
-        return newUser;
-      }
-      return user;
-    }),
-    notification: notification
-      ? state.notification.concat([
-          {
-            ...notification,
-            sender: state.users.find((user) => user.email === message.sender)!
-              .name,
-          },
-        ])
-      : state.notification,
-    received:
-      message.sender === state.selected.email ||
-      message.receiver === state.selected.email
-        ? state.received.concat(message)
-        : state.received,
-  })),
+  on(
+    WsActions.receivedMessage,
+    (state, { message, notification, authEmail }) => ({
+      ...state,
+      users: state.users.map((user) => {
+        if (user.email === message.sender && message.sender !== authEmail) {
+          let newUser = { ...user };
+          newUser.newMessages += 1;
+          return newUser;
+        }
+        return user;
+      }),
+      notification: notification
+        ? state.notification.concat([
+            {
+              ...notification,
+              sender: state.users.find((user) => user.email === message.sender)!
+                .name,
+            },
+          ])
+        : state.notification,
+      received:
+        message.sender === state.selected.email ||
+        message.receiver === state.selected.email
+          ? state.received.concat(message)
+          : state.received,
+    })
+  ),
   on(WsActions.select, (state, { selection }) => ({
     ...state,
     users: state.users.map((user) =>

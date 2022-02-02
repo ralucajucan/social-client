@@ -15,7 +15,11 @@ export const receivedUsers = createAction(
 
 export const receivedMessage = createAction(
   '[WS] Received Message',
-  props<{ message: IMessage; notification: INotification | null }>()
+  props<{
+    message: IMessage;
+    notification: INotification | null;
+    authEmail: string;
+  }>()
 );
 
 export const receivedError = createAction(

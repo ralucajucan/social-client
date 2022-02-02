@@ -217,7 +217,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   remove() {}
 
   onSendMessage(event: Event) {
-    if (!this.text.length && !this.attachmentIds.length) return;
+    if (!this.text?.trim().length && !this.attachmentIds.length) return;
     const message: SendDTO = {
       text: this.text,
       user: this.selected?.email || '',

@@ -128,6 +128,7 @@ export class WsEffects {
             return WsActions.receivedMessage({
               message: msg,
               notification: notif,
+              authEmail: authEmail,
             });
           })
         )
