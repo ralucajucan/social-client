@@ -41,7 +41,9 @@
           mat-line
           style="color: darkviolet"
           *ngIf="user.newMessages > 0; else noReceived"
-          ><mat-icon inline="true">mail</mat-icon> Mesaj nou!</span
+          ><mat-icon inline="true">mail</mat-icon> Mesaj nou! ({{
+            user.newMessages
+          }})</span
         >
         <ng-template #noReceived
           ><span mat-line [matTooltip]="user.email">{{
